@@ -68,7 +68,9 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="LanguageModels.vb" />
+    <Compile Include="SourceCode\Entailment.vb" />
+    <Compile Include="SourceCode\EntityModels.vb" />
+    <Compile Include="SourceCode\LanguageModels.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
@@ -85,8 +87,13 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="StorageModels.vb" />
-    <Compile Include="MainModels.vb" />
+    <Compile Include="SourceCode\Examples.vb" />
+    <Compile Include="SourceCode\Embeddings.vb" />
+    <Compile Include="SourceCode\TrainingTextGenerator.vb" />
+    <Compile Include="SourceCode\Storage.vb" />
+    <Compile Include="SourceCode\InputModels.vb" />
+    <Compile Include="SourceCode\Trees.vb" />
+    <Compile Include="SourceCode\Utilitys.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="My Project\Resources.resx">
@@ -106,6 +113,16 @@
       <CustomToolNamespace>My</CustomToolNamespace>
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
     </None>
+    <None Include="Refference\EntityClassifier.md" />
+    <None Include="Refference\TrieTree.md" />
+    <None Include="Refference\WordEmbeddingModels.md" />
+    <None Include="Refference\TokenenizerModels.md" />
+    <None Include="README.md" />
+    <None Include="Refference\CorpusModel.md" />
+    <None Include="Refference\BeliefNetwork.md" />
+    <None Include="Refference\StorageModel.md" />
+    <None Include="Refference\MinHash.md" />
+    <None Include="Refference\PositionalEncoderDecoder.md" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MathNet.Numerics">
@@ -118,5 +135,22 @@
       <Version>13.0.3</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Data\Female.txt" />
+    <Content Include="Data\femaleNames.txt" />
+    <Content Include="Data\LearnedPredicates.txt" />
+    <Content Include="Data\Male.txt" />
+    <Content Include="Data\maleNames.txt" />
+    <Content Include="Data\negative-words.txt" />
+    <Content Include="Data\Nounlist.txt" />
+    <Content Include="Text_Corpus\OpenMind_ConceptNet_Relationships.txt" />
+    <Content Include="Data\part-of-speech.txt" />
+    <Content Include="Data\positive-words.txt" />
+    <Content Include="Data\ProNouns.txt" />
+    <Content Include="Text_Corpus\wordlist.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>

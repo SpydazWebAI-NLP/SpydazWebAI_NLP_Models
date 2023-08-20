@@ -1,0 +1,70 @@
+﻿Concepts/ Relations. Example) OpenMind
+
+1. `IsA`:
+   - Keywords: "is a", "are", "am", "is an example of", "is a type of", "refers to", "represents"
+   - Pattern: "concept is a concept"
+
+2. `PartOf`:
+   - Keywords: "part of", "component of", "element of", "belong to"
+   - Pattern: "concept is part of concept"
+
+3. `HasA`:
+   - Keywords: "has a", "have a", "contains", "includes", "possesses"
+   - Pattern: "concept has a concept"
+
+4. `UsedFor`:
+   - Keywords: "used for", "utilized for", "serves for", "intended for", "applied in"
+   - Pattern: "concept is used for concept"
+
+5. `CapableOf`:
+   - Keywords: "capable of", "able to", "can", "has the ability to", "is able to"
+   - Pattern: "concept is capable of concept"
+
+6. `AtLocation`:
+   - Keywords: "at location", "located at", "found in", "situated in", "exists in"
+   - Pattern: "concept is at location concept"
+
+7. `Causes`:
+   - Keywords: "causes", "results in", "brings about", "leads to", "creates"
+   - Pattern: "concept causes concept"
+
+8. `CreatedBy`:
+   - Keywords: "created by", "made by", "produced by", "developed by", "invented by"
+   - Pattern: "concept is created by concept"
+
+9. `DefinedAs`:
+   - Keywords: "defined as", "described as", "characterized as", "referred to as"
+   - Pattern: "concept is defined as concept"
+
+10. `SimilarTo`:
+    - Keywords: "similar to", "resembles", "alike", "comparable to", "analogous to"
+    - Pattern: "concept is similar to concept"
+
+11. `Synonym`:
+    - Keywords: "synonym of", "means the same as", "is equivalent to", "has the same meaning as"
+    - Pattern: "concept is a synonym of concept"
+
+12. `Antonym`:
+    - Keywords: "antonym of", "means the opposite of", "is opposite to", "has the opposite meaning of"
+    - Pattern: "concept is an antonym of concept"
+
+13. `DistinctFrom`:
+    - Keywords: "distinct from", "different from", "not the same as", "unlike"
+    - Pattern: "concept is distinct from concept"
+
+14. `DerivedFrom`:
+    - Keywords: "derived from", "originated from", "evolved from", "comes from"
+    - Pattern: "concept is derived from concept"
+
+15. `Entails`:
+    - Keywords: "entails", "implies", "necessitates", "requires", "involves"
+    - Pattern: "concept entails concept"
+
+16. `MannerOf`:
+    - Keywords: "manner of", "way of", "method of", "approach of", "style of"
+    - Pattern: "concept is a manner of concept"
+
+17. `RelatedTo`:
+    - Keywords: "related to", "connected to", "associated with", "linked to", "correlated with"
+    - Pattern: "concept is related to concept"
+
