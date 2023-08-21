@@ -13,7 +13,7 @@ Imports MathNet.Numerics.IntegralTransforms
 
 Namespace Models
     Namespace Embeddings
-
+        <Serializable>
         Public MustInherit Class WordEmbeddingsModel
 
             ' A simple vocabulary for demonstration purposes.
@@ -424,6 +424,7 @@ Namespace Models
         '''    This Step enables you To refine the word embeddings 
         '''    And make them more accurate And context-specific.
         ''' </summary>
+        <Serializable>
         Public Class HybridWordEmbeddingsModel
             Inherits WordEmbeddingsModel
 
@@ -583,6 +584,7 @@ Namespace Models
             ''' <summary>
             ''' This is a TFIDF Vectorizer For basic Embeddings
             ''' </summary>
+            <Serializable>
             Public Class Sentence2Vector
                 Private ReadOnly documents As List(Of List(Of String))
                 Private ReadOnly idf As Dictionary(Of String, Double)
@@ -648,15 +650,15 @@ Namespace Models
 
             End Class
             Public Class Word2Vector
-                Private embeddingMatrix As Double(,)
-                Private embeddingSize As Integer
-                Private indexToWord As Dictionary(Of Integer, String)
-                Private learningRate As Double
-                Private negativeSamples As Integer
-                Private vocabulary As HashSet(Of String)
-                Private weights As Double()
-                Private windowSize As Integer
-                Private wordToIndex As Dictionary(Of String, Integer)
+                Public embeddingMatrix As Double(,)
+                Public embeddingSize As Integer
+                Public indexToWord As Dictionary(Of Integer, String)
+                Public learningRate As Double
+                Public negativeSamples As Integer
+                Public vocabulary As HashSet(Of String)
+                Public weights As Double()
+                Public windowSize As Integer
+                Public wordToIndex As Dictionary(Of String, Integer)
 
                 Public Sub New(embeddingSize As Integer, learningRate As Double, windowSize As Integer, negativeSamples As Integer)
                     Me.embeddingSize = embeddingSize
@@ -1034,6 +1036,7 @@ Namespace Models
             ''' May sacrifice quality: With negative sampling, some negative samples may Not be truly informative, potentially leading To a slight degradation In the quality Of learned word embeddings compared To hierarchical softmax.
             ''' Tuning hyperparameters: The effectiveness Of negative sampling depends On the selection Of the number Of negative samples And learning rate, which may require tuning. 
             ''' </summary>
+            <Serializable>
             Public Class WordEmbeddingsWithNegativeSampling
                 Inherits WordEmbeddingsModel
                 Public NumNegativeSamples As Integer = 5 ' Number of negative samples per positive sample.
@@ -1223,6 +1226,7 @@ Namespace Models
             ''' Computationally expensive For large vocabularies: Hierarchical softmax can become computationally expensive With larger vocabularies, As it requires traversing a binary tree To compute probabilities For Each word during training.
             ''' More complex To implement: Implementing hierarchical softmax can be more complex compared To negative sampling.
             ''' </summary>
+            <Serializable>
             Public Class WordEmbeddingsWithHierarchicalSoftmax
                 Inherits WordEmbeddingsModel
                 Public Sub New(ByRef model As WordEmbeddingsModel)
@@ -1465,6 +1469,7 @@ Namespace Models
                 End Class
 
             End Class
+            <Serializable>
             Public Class WordEmbeddingsWithGloVe
                 Inherits WordEmbeddingsModel
 
@@ -1601,6 +1606,7 @@ Namespace Models
                 End Sub
 
             End Class
+            <Serializable>
             Public Class WordEmbeddingsWithFastText
                 Inherits WordEmbeddingsModel
 
@@ -1714,6 +1720,7 @@ Namespace Models
                     Next
                 End Sub
             End Class
+            <Serializable>
             Public Class WordEmbeddingsWithCBOW
                 Inherits WordEmbeddingsModel
 
@@ -1854,6 +1861,7 @@ Namespace Models
                     Next
                 End Sub
             End Class
+            <Serializable>
             Public Class WordEmbeddingWithTemplate
                 Inherits WordEmbeddingsModel
 
@@ -1873,6 +1881,7 @@ Namespace Models
                     Throw New NotImplementedException()
                 End Sub
             End Class
+            <Serializable>
             Public Class WordEmbeddingWithSentiment
                 Inherits WordEmbeddingsModel
 
@@ -2102,6 +2111,7 @@ Namespace Models
                 End Function
 
             End Class
+            <Serializable>
             Public Class WordEmbeddingWithTfIdf
                 Inherits WordEmbeddingsModel
 
@@ -2268,6 +2278,7 @@ Namespace Models
 
         End Namespace
         Namespace Audio
+            <Serializable>
             Public Class Audio2Vector
                 Public Shared Function AudioToVector(audioSignal As Double(), windowSize As Integer, hopSize As Integer) As List(Of Complex())
                     Dim vectors As New List(Of Complex())
@@ -2382,6 +2393,7 @@ Namespace Models
             End Class
         End Namespace
         Namespace Images
+            <Serializable>
             Public Class Image2Vector
                 Public Shared Sub SaveVectorToFile(imgVector As Double(), outputPath As String)
                     Using writer As New System.IO.StreamWriter(outputPath)

@@ -89,6 +89,7 @@
     </Compile>
     <Compile Include="SourceCode\Examples.vb" />
     <Compile Include="SourceCode\Embeddings.vb" />
+    <Compile Include="SourceCode\Tokenizers.vb" />
     <Compile Include="SourceCode\TrainingTextGenerator.vb" />
     <Compile Include="SourceCode\Storage.vb" />
     <Compile Include="SourceCode\InputModels.vb" />

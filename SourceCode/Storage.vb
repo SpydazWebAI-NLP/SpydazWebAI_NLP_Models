@@ -4,6 +4,7 @@ Imports MathNet.Numerics
 Namespace Models
     Namespace Embeddings
         Namespace Storage
+            <Serializable>
             Public Class SearchEngine
                 Private documents As List(Of Document)
 
@@ -42,6 +43,7 @@ Namespace Models
                     Return snippet
                 End Function
             End Class
+            <Serializable>
             Public Class Document
                 Public Property Index As Integer
                 Public Property Content As String
@@ -65,7 +67,7 @@ Namespace Models
                 End Sub
             End Class
             Namespace MinHashAndLSH
-
+                <Serializable>
                 Public Class LSHIndex
                     Private HashTables As List(Of Dictionary(Of Integer, List(Of Document)))
                     Private NumHashTables As Integer
@@ -184,7 +186,7 @@ Namespace Models
                     End Function
                 End Class
 
-
+                <Serializable>
                 Public Class MinHashVectorDatabase
                     Private MinHashIndex As MinHashIndex
 
@@ -203,6 +205,7 @@ Namespace Models
                         Return similarDocuments
                     End Function
                 End Class
+                <Serializable>
                 Public Class MinHashIndex
                     Private NumHashFunctions As Integer
                     Private SignatureMatrix As List(Of List(Of Integer))
@@ -289,6 +292,7 @@ Namespace Models
                     End Function
                 End Class
             End Namespace
+            <Serializable>
             Public Class VectorStorageModel
                 Private AudioVectors As Dictionary(Of Integer, List(Of Complex)) = New Dictionary(Of Integer, List(Of Complex))()
                 Private ImageVectors As Dictionary(Of Integer, Tuple(Of VectorType, List(Of Double))) = New Dictionary(Of Integer, Tuple(Of VectorType, List(Of Double)))()

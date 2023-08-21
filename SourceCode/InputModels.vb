@@ -1,13 +1,16 @@
 ﻿Imports System.Drawing
 Imports System.IO
+Imports System.Runtime.CompilerServices
+Imports System.Runtime.Serialization.Formatters.Binary
 Imports System.Text.RegularExpressions
 Imports System.Web.Script.Serialization
 Imports System.Windows.Forms
 Imports InputModelling.LanguageModels
 Imports InputModelling.Models.EntityModel
 Imports InputModelling.Models.MatrixModels
+Imports InputModelling.Models.Nodes
 Imports InputModelling.Models.Readers
-Imports InputModelling.Models.Tokenizers
+Imports InputModelling.Models.TokenizerModels
 Imports InputModelling.Models.VocabularyModelling
 Imports InputModelling.Utilitys
 Imports Newtonsoft.Json
@@ -16,6 +19,7 @@ Imports Newtonsoft.Json
 Namespace Models
 
     Namespace Chunkers
+        <Serializable>
         Public Class TextCorpusChunker
             Implements ICorpusChunker
 
@@ -64,6 +68,7 @@ Namespace Models
         ''' <summary>
         ''' Separates text into groups(chunks)
         ''' </summary>
+        <Serializable>
         Public Class TextChunking
             ''' <summary>
             ''' a Function In VB which takes a text And splits it Into chunks Of X length  
@@ -112,286 +117,6 @@ Namespace Models
                 Return chunks
             End Function
 
-
-            ''' <summary>
-            ''' Grammatical person refers to the degree of involvement of a participant in an action, event, or circumstance.
-            ''' There are three degrees of grammatical person:
-            ''' first person (the speaker),
-            ''' second person (someone being spoken to),
-            ''' and third person (anyone/anything not being directly addressed).
-            ''' </summary>
-            Public Class GramaticalPerson
-                Private Shared FirstPersonProNouns As List(Of String) = New List(Of String)({" I ", " ME ", " MY", " MINE", " MYSELF", "I ", " US", " OUR", " OURS"})
-                Private Shared SecondPersonProNouns As List(Of String) = New List(Of String)({" YOU ", " YOUR ", " YOURSELF ", " YOURSELFS", " YOURSELVES"})
-                Private Shared ThirdPersonProNouns As List(Of String) = New List(Of String)({"he", "him", " his", " himself", " she", " her", " hers", " herself", " it", " its", " itself", " they", "them", "their", "theirs", "themselves"})
-
-                ''' <summary>
-                ''' Grammatical person refers to the degree of involvement of a participant in an action, event, or circumstance.
-                ''' There are three degrees of grammatical person:
-                ''' first person (the speaker),
-                ''' second person (someone being spoken to),
-                ''' and third person (anyone/anything not being directly addressed).
-                ''' </summary>
-                Public Enum PerspectivePerson
-                    First_Person_ME = 0
-                    Second_Person_YOU = 1
-                    Third_Person_THEM = 2
-                    NOBODY = 4
-                End Enum
-
-                ''' <summary>
-                ''' The cases Of pronouns tell you how they are being used In a sentence.
-                ''' </summary>
-                Public Enum PerspectiveCase
-                    PersonalSubject = 0
-                    PersonalObject = 1
-                    PersonalPosessive = 2
-                    NOBODY = 3
-                End Enum
-
-#Region "Perspective Person"
-
-                ''' <summary>
-                ''' checks list if it contains item
-                ''' </summary>
-                ''' <param name="UserSentence"></param>
-                ''' <param name="Lst"></param>
-                ''' <returns></returns>
-                Private Shared Function DETECT_PERSPECTIVE(ByRef UserSentence As String, Lst As List(Of String)) As Boolean
-                    DETECT_PERSPECTIVE = False
-                    For Each item In Lst
-                        If UCase(UserSentence).Contains(UCase(item)) Then Return True
-                    Next
-                End Function
-
-                ''' <summary>
-                ''' RETURNS THE SUBJECT PERSPECTIVE
-                '''         ''' IE:
-                ''' "ME" - 1ST PERSON -
-                ''' "YOU" - SECOND PERSON -
-                ''' "THEM" - 3RD PERSON -
-                ''' "NOBODY" NO PERSPECTIVE
-                ''' </summary>
-                ''' <param name="UserInputStr"></param>
-                ''' <returns></returns>
-                Public Shared Function GetGramiticalPersonStr(ByRef UserInputStr As String) As PerspectivePerson
-                    If DETECT_1ST_PERSON(UserInputStr) = True Then Return PerspectivePerson.First_Person_ME
-                    If DETECT_2ND_PERSON(UserInputStr) = True Then Return PerspectivePerson.Second_Person_YOU
-                    If DETECT_3RD_PERSON(UserInputStr) = True Then Return PerspectivePerson.Third_Person_THEM
-                    Return PerspectivePerson.NOBODY
-                End Function
-
-                ''' <summary>
-                ''' First person definition: first person indicates the speaker.
-                ''' First person is the I/we perspective.
-                ''' We, us, our,and ourselves are all first-person pronouns.
-                ''' Specifically, they are plural first-person pronouns.
-                ''' Singular first-person pronouns include I, me, my, mine and myself.
-                ''' </summary>
-                ''' <returns></returns>
-                Public Shared Function DETECT_1ST_PERSON(ByRef UserSentence As String) As Boolean
-                    DETECT_1ST_PERSON = False
-                    If DETECT_PERSPECTIVE(UserSentence, FirstPersonProNouns) = True Then Return True
-                End Function
-
-                ''' <summary>
-                ''' Second person definition: second person indicates the addressee.
-                ''' Second person is the you perspective.
-                ''' The second-person point of view belongs to the person (or people) being addressed.
-                ''' This is the “you” perspective.
-                ''' the biggest indicator of the second person is the use of second-person pronouns:
-                ''' you, your, yours, yourself, yourselves.
-                ''' </summary>
-                ''' <returns></returns>
-                Public Shared Function DETECT_2ND_PERSON(ByRef UserSentence As String) As Boolean
-                    DETECT_2ND_PERSON = False
-                    If DETECT_PERSPECTIVE(UserSentence, SecondPersonProNouns) = True Then Return True
-                End Function
-
-                ''' <summary>
-                ''' Third person definition: third person indicates a third party individual other than the speaker.
-                ''' Third person is the he/she/it/they perspective.
-                ''' The third-person point of view belongs to the person (or people) being talked about.
-                ''' The third-person pronouns include
-                ''' he, him, his, himself, she, her, hers, herself, it, its, itself, they, them, their, theirs, and themselves.
-                ''' </summary>
-                ''' <returns></returns>
-                Public Shared Function DETECT_3RD_PERSON(ByRef UserSentence As String) As Boolean
-                    DETECT_3RD_PERSON = False
-                    If DETECT_PERSPECTIVE(UserSentence, ThirdPersonProNouns) = True Then Return True
-                End Function
-
-                ''' <summary>
-                ''' Returns detected Pronoun indicator
-                ''' </summary>
-                ''' <param name="Userinput"></param>
-                ''' <returns></returns>
-                Public Shared Function GetDetectedPersonalProNoun(ByRef Userinput As String) As String
-                    Dim lst As New List(Of String)
-                    lst.AddRange(FirstPersonProNouns)
-                    lst.AddRange(SecondPersonProNouns)
-                    lst.AddRange(ThirdPersonProNouns)
-                    For Each item In lst
-                        If Userinput.Contains(UCase(item)) Then Return UCase(item)
-                    Next
-                    Return ""
-                End Function
-
-#End Region
-
-#Region "Case-The cases Of pronouns tell you how they are being used In a sentence."
-
-                ''' <summary>
-                ''' The cases Of pronouns tell you how they are being used In a sentence.
-                ''' SUBJECT / OBJECT or POSSESSION - or NONE
-                ''' </summary>
-                ''' <returns></returns>
-                Public Function CheckCase(ByRef Userinput As String) As PerspectiveCase
-                    CheckCase = PerspectiveCase.NOBODY
-                    If CheckPersonalSubject(Userinput) = True Then
-                        Return PerspectiveCase.PersonalSubject
-                    Else
-                        If CheckPersonalObject(Userinput) = True Then
-                            Return PerspectiveCase.PersonalObject
-                            If CheckPersonalPossession(Userinput) = True Then
-                                Return PerspectiveCase.PersonalPosessive
-                            End If
-                        End If
-                    End If
-
-                End Function
-
-                ''' <summary>
-                ''' The cases Of pronouns tell you how they are being used In a sentence.
-                ''' </summary>
-                Public Shared Function CheckPersonalSubject(ByRef Userinput As String) As Boolean
-                    Dim mFirstPersonProNouns As List(Of String) = New List(Of String)({" I", " WE"})
-                    Dim mSecondPersonProNouns As List(Of String) = New List(Of String)({" YOU", " US"})
-                    Dim mThirdPersonProNouns As List(Of String) = New List(Of String)({" HE", " SHE", " IT"})
-                    If DETECT_PERSPECTIVE(Userinput, mFirstPersonProNouns) = True Or
-                    DETECT_PERSPECTIVE(Userinput, mSecondPersonProNouns) = True Or
-                    DETECT_PERSPECTIVE(Userinput, mThirdPersonProNouns) = True Then
-                        Return True
-                    Else
-                        Return False
-                    End If
-
-                End Function
-
-                ''' <summary>
-                ''' The cases Of pronouns tell you how they are being used In a sentence.
-                ''' </summary>
-                Public Shared Function CheckPersonalObject(ByRef Userinput As String) As Boolean
-                    Dim mFirstPersonProNouns As List(Of String) = New List(Of String)({"ME"})
-                    Dim mSecondPersonProNouns As List(Of String) = New List(Of String)({"YOU", "US"})
-                    Dim mThirdPersonProNouns As List(Of String) = New List(Of String)({" HIM", " HER", " IT"})
-                    If DETECT_PERSPECTIVE(Userinput, mFirstPersonProNouns) = True Or
-                    DETECT_PERSPECTIVE(Userinput, mSecondPersonProNouns) = True Or
-                    DETECT_PERSPECTIVE(Userinput, mThirdPersonProNouns) = True Then
-                        Return True
-                    Else
-                        Return False
-                    End If
-                End Function
-
-                ''' <summary>
-                ''' The cases Of pronouns tell you how they are being used In a sentence.
-                ''' </summary>
-                Public Shared Function CheckPersonalPossession(ByRef Userinput As String) As Boolean
-                    Dim mFirstPersonProNouns As List(Of String) = New List(Of String)({" MY", " MINE", " OUR", " OURS"})
-                    Dim mSecondPersonProNouns As List(Of String) = New List(Of String)({" YOUR", " YOURS"})
-                    Dim mThirdPersonProNouns As List(Of String) = New List(Of String)({" HIS", " HER", " HES", " HE IS", " HERS", " THEIR", " THEIRS"})
-                    If DETECT_PERSPECTIVE(Userinput, mFirstPersonProNouns) = True Or
-                    DETECT_PERSPECTIVE(Userinput, mSecondPersonProNouns) = True Or
-                    DETECT_PERSPECTIVE(Userinput, mThirdPersonProNouns) = True Then
-                        Return True
-                    Else
-                        Return False
-                    End If
-                End Function
-
-                ''' <summary>
-                ''' The cases Of pronouns tell you how they are being used In a sentence.
-                ''' "ME" - 1ST PERSON -
-                ''' "YOU" - SECOND PERSON -
-                ''' "THEM" - 3RD PERSON -
-                ''' "NOBODY" NO PERSPECTIVE
-                ''' </summary>
-                Public Shared Function GetPersonalSubject(ByRef Userinput As String) As String
-                    Dim mFirstPersonProNouns As List(Of String) = New List(Of String)({" I", " WE"})
-                    Dim mSecondPersonProNouns As List(Of String) = New List(Of String)({" YOU", " US"})
-                    Dim mThirdPersonProNouns As List(Of String) = New List(Of String)({" HE", " SHE", " IT"})
-                    If DETECT_PERSPECTIVE(Userinput, mFirstPersonProNouns) = True Then
-                        Return "ME"
-                    Else
-                        If DETECT_PERSPECTIVE(Userinput, mSecondPersonProNouns) = True Then
-                            Return "YOU"
-                        Else
-                            If DETECT_PERSPECTIVE(Userinput, mThirdPersonProNouns) = True Then
-                                Return "THEM"
-                            Else
-                                Return "NOBODY"
-                            End If
-                        End If
-                    End If
-
-                End Function
-
-                ''' <summary>
-                ''' The cases Of pronouns tell you how they are being used In a sentence.
-                ''' "ME" - 1ST PERSON -
-                ''' "YOU" - SECOND PERSON -
-                ''' "THEM" - 3RD PERSON -
-                ''' "NOBODY" NO PERSPECTIVE
-                ''' </summary>
-                Public Shared Function GetPersonalObject(ByRef Userinput As String) As String
-                    Dim mFirstPersonProNouns As List(Of String) = New List(Of String)({"ME"})
-                    Dim mSecondPersonProNouns As List(Of String) = New List(Of String)({"YOU", "US"})
-                    Dim mThirdPersonProNouns As List(Of String) = New List(Of String)({" HIM", " HER", " IT"})
-                    If DETECT_PERSPECTIVE(Userinput, mFirstPersonProNouns) = True Then
-                        Return "ME"
-                    Else
-                        If DETECT_PERSPECTIVE(Userinput, mSecondPersonProNouns) = True Then
-                            Return "YOU"
-                        Else
-                            If DETECT_PERSPECTIVE(Userinput, mThirdPersonProNouns) = True Then
-                                Return "THEM"
-                            Else
-                                Return "NOBODY"
-                            End If
-                        End If
-                    End If
-                End Function
-
-                ''' <summary>
-                ''' The cases Of pronouns tell you how they are being used In a sentence.
-                ''' "ME" - 1ST PERSON -
-                ''' "YOU" - SECOND PERSON -
-                ''' "THEM" - 3RD PERSON -
-                ''' "NOBODY" NO PERSPECTIVE
-                ''' </summary>
-                Public Shared Function GetPersonalPossession(ByRef Userinput As String) As String
-                    Dim mFirstPersonProNouns As List(Of String) = New List(Of String)({" MY", " MINE", " OUR", " OURS"})
-                    Dim mSecondPersonProNouns As List(Of String) = New List(Of String)({" YOUR", " YOURS"})
-                    Dim mThirdPersonProNouns As List(Of String) = New List(Of String)({" HIS", " HER", " HES", " HE IS", " HERS", " THEIR", " THEIRS"})
-                    If DETECT_PERSPECTIVE(Userinput, mFirstPersonProNouns) = True Then
-                        Return "ME"
-                    Else
-                        If DETECT_PERSPECTIVE(Userinput, mSecondPersonProNouns) = True Then
-                            Return "YOU"
-                        Else
-                            If DETECT_PERSPECTIVE(Userinput, mThirdPersonProNouns) = True Then
-                                Return "THEM"
-                            Else
-                                Return "NOBODY"
-                            End If
-                        End If
-                    End If
-                End Function
-
-#End Region
-
-            End Class
 
             ''' <summary>
             ''' counts occurrences of a specific phoneme
@@ -500,7 +225,6 @@ PROC_ERR:
 
 
         End Class
-
         Public Interface ICorpusChunker
 
             Function FilterUsingPunctuationVocabulary(data As List(Of String)) As List(Of String)
@@ -512,6 +236,7 @@ PROC_ERR:
             Function ProcessTextData(rawData As String, useFiltering As Boolean) As List(Of String)
 
         End Interface
+        <Serializable>
         Public Class ChunkProcessor
             Private chunkType As ChunkType
             Private maxSize As Integer
@@ -744,1158 +469,9 @@ PROC_ERR:
 
         End Class
     End Namespace
-    Namespace Tokenizers
-        Public Class TokenizerWordPiece
-            Private ReadOnly corpus As List(Of String)
-            Private vocabulary As Dictionary(Of String, Integer)
-            Private maxVocabSize As Integer
-            Private ReadOnly maxSubwordLength As Integer
 
-
-
-            Public Sub New()
-            End Sub
-            Public Sub New(corpus As List(Of String))
-                Me.corpus = corpus
-                Me.vocabulary = New Dictionary(Of String, Integer)
-                Me.maxVocabSize = 1000000
-                Me.maxSubwordLength = 20
-            End Sub
-            Public Sub New(corpus As List(Of String), vocabulary As Dictionary(Of String, Integer), maxVocabSize As Integer, maxSubwordLength As Integer)
-                If corpus Is Nothing Then
-                    Throw New ArgumentNullException(NameOf(corpus))
-                End If
-
-                If vocabulary Is Nothing Then
-                    Throw New ArgumentNullException(NameOf(vocabulary))
-                End If
-
-                Me.corpus = corpus
-                Me.vocabulary = vocabulary
-                Me.maxVocabSize = maxVocabSize
-                Me.maxSubwordLength = maxSubwordLength
-            End Sub
-            Public Sub Train()
-                Dim subwordCounts As New Dictionary(Of String, Integer)
-
-                ' Count subword occurrences in the corpus
-                For Each sentence As String In corpus
-                    Dim tokens As List(Of String) = Tokenize(sentence)
-
-                    For Each token As String In tokens
-                        If subwordCounts.ContainsKey(token) Then
-                            subwordCounts(token) += 1
-                        Else
-                            subwordCounts.Add(token, 1)
-                        End If
-                    Next
-                Next
-
-                ' Sort subwords by frequency and add them to the vocabulary
-                Dim sortedSubwords = subwordCounts.OrderByDescending(Function(pair) pair.Value)
-
-                For Each pair In sortedSubwords.Take(maxVocabSize)
-                    vocabulary.Add(pair.Key, vocabulary.Count)
-                Next
-            End Sub
-
-
-            Public Function GetVocabulary() As Dictionary(Of String, Integer)
-                Return vocabulary
-            End Function
-            Public Function Tokenize(text As String) As List(Of String)
-                Dim tokens As New List(Of String)
-                Dim index As Integer = 0
-
-                While index < text.Length
-                    Dim subwordLength As Integer = Math.Min(maxSubwordLength, text.Length - index)
-                    Dim subword As String = text.Substring(index, subwordLength)
-
-                    While subwordLength > 0 AndAlso Not vocabulary.ContainsKey(subword)
-                        subwordLength -= 1
-                        subword = text.Substring(index, subwordLength)
-                    End While
-
-                    tokens.Add(subword)
-                    index += subwordLength
-                End While
-
-                Return tokens
-            End Function
-            Public Shared Function CalculateWordPieceFrequency(ByVal subword As String, ByVal mergedWord As String) As Integer
-                Dim occurrences As Integer = 0
-                Dim index As Integer = -1
-
-                While True
-                    index = mergedWord.IndexOf(subword, index + 1)
-                    If index = -1 Then
-                        Exit While
-                    End If
-
-                    ' Check if the found index is part of a valid word (not a subword of another word)
-                    If index = 0 OrElse mergedWord(index - 1) = " "c Then
-                        Dim endIndex As Integer = index + subword.Length
-                        If endIndex = mergedWord.Length OrElse mergedWord(endIndex) = " "c Then
-                            occurrences += 1
-                        End If
-                    End If
-                End While
-
-                Return occurrences
-            End Function
-
-
-        End Class
-        Public Class TokenizerBPE
-            Public Class BpeSubwordPair
-                Public Property Subword1 As String
-                Public Property Subword2 As String
-                Public Property Frequency As Integer
-
-                Public Sub New(subword1 As String, subword2 As String, frequency As Integer)
-                    Me.Subword1 = subword1
-                    Me.Subword2 = subword2
-                    Me.Frequency = frequency
-                End Sub
-            End Class
-            Public Class BpeVocabulary
-                Inherits Dictionary(Of String, Integer)
-            End Class
-            Private Sub New()
-                ' Private constructor to prevent instantiation without parameters
-            End Sub
-
-
-
-            Public Shared Function TrainBpeModel(corpus As List(Of String), numMerges As Integer) As BpeVocabulary
-                ' Tokenize the corpus at the character level to get the initial vocabulary
-                Dim characterLevelVocabulary As BpeVocabulary = TokenizeCorpusToCharacterLevel(corpus)
-
-                ' Merge the most frequent pairs of subwords iteratively
-                For i As Integer = 0 To numMerges - 1
-                    Dim mostFrequentPair As BpeSubwordPair = FindMostFrequentPair(characterLevelVocabulary)
-                    If mostFrequentPair Is Nothing Then
-                        Exit For
-                    End If
-
-                    Dim newSubword As String = mostFrequentPair.Subword1 + mostFrequentPair.Subword2
-                    characterLevelVocabulary = MergeSubwordPair(characterLevelVocabulary, mostFrequentPair, newSubword)
-                Next
-
-                Return characterLevelVocabulary
-            End Function
-
-            Private Shared Function TokenizeCorpusToCharacterLevel(corpus As List(Of String)) As BpeVocabulary
-                Dim characterLevelVocabulary As New BpeVocabulary()
-
-                For Each document As String In corpus
-                    For Each character As Char In document
-                        Dim subword As String = character.ToString()
-
-                        If characterLevelVocabulary.ContainsKey(subword) Then
-                            characterLevelVocabulary(subword) += 1
-                        Else
-                            characterLevelVocabulary.Add(subword, 1)
-                        End If
-                    Next
-                Next
-
-                Return characterLevelVocabulary
-            End Function
-
-            Private Shared Function FindMostFrequentPair(vocabulary As BpeVocabulary) As BpeSubwordPair
-                Dim mostFrequentPair As BpeSubwordPair = Nothing
-                Dim maxFrequency As Integer = 0
-
-                For Each subword1 As String In vocabulary.Keys
-                    For Each subword2 As String In vocabulary.Keys
-                        If subword1 <> subword2 Then
-                            Dim pairFrequency As Integer = CalculatePairFrequency(vocabulary, subword1, subword2)
-                            If pairFrequency > maxFrequency Then
-                                maxFrequency = pairFrequency
-                                mostFrequentPair = New BpeSubwordPair(subword1, subword2, pairFrequency)
-                            End If
-                        End If
-                    Next
-                Next
-
-                Return mostFrequentPair
-            End Function
-
-            Private Shared Function CalculatePairFrequency(vocabulary As BpeVocabulary, subword1 As String, subword2 As String) As Integer
-                Dim pairFrequency As Integer = 0
-
-                For Each word As String In vocabulary.Keys
-                    Dim mergedWord As String = word.Replace(subword1 + subword2, subword1 + subword2.ToLower())
-                    Dim occurrences As Integer = 0
-                    Dim index As Integer = -1
-
-                    While True
-                        index = mergedWord.IndexOf(subword1 + subword2.ToLower(), index + 1)
-                        If index = -1 Then
-                            Exit While
-                        End If
-                        occurrences += 1
-                    End While
-
-
-                    pairFrequency += occurrences * vocabulary(word)
-                Next
-
-                Return pairFrequency
-            End Function
-
-            Private Shared Function MergeSubwordPair(vocabulary As BpeVocabulary, pairToMerge As BpeSubwordPair, newSubword As String) As BpeVocabulary
-                Dim newVocabulary As New BpeVocabulary()
-
-                For Each subword As String In vocabulary.Keys
-                    Dim mergedSubword As String = subword.Replace(pairToMerge.Subword1 + pairToMerge.Subword2, newSubword)
-                    newVocabulary(mergedSubword) = vocabulary(subword)
-                Next
-
-                Return newVocabulary
-            End Function
-        End Class
-        Public Class TokenizerBitWord
-            Public Property Vocabulary As Dictionary(Of String, Integer)
-            Public Sub New()
-                Vocabulary = New Dictionary(Of String, Integer)
-            End Sub
-            Public Function Tokenize(ByRef Corpus As List(Of String)) As List(Of String)
-                Dim tokens As New List(Of String)
-                Dim Subword As String = ""
-
-                Dim UnknownDocs As New List(Of String)
-                'SubDoc Vocabulary Tokenizer
-                For Each doc In Corpus
-                    For i = 0 To doc.Count - 1
-                        Subword &= doc(i)
-                        If Vocabulary.ContainsKey(Subword.ToLower()) Then
-                            tokens.Add(Subword)
-                            Subword = ""
-                        End If
-
-                    Next
-                    'Save unknowns
-                    If Subword <> "" Then
-                        UnknownDocs.Add(Subword)
-                    End If
-                Next
-                'Unknown paragraphs
-                Dim UnknownParagraphs As New List(Of String)
-                If UnknownDocs.Count > 0 Then
-                    For Each doc In UnknownDocs
-                        Dim Para As List(Of String) = BasicTokenizer.TokenizeToParagraph(doc)
-                        For Each item In Para
-                            Subword = ""
-
-                            Subword += item
-                            If Vocabulary.ContainsKey(Subword.ToLower) Then
-                                ' If the subword is in the Vocabulary, add it to the list of subwords
-                                tokens.Add(Subword.ToLower)
-                                ' Reset the subword for the next iteration
-                                Subword = ""
-                            End If
-                            'Save unknowns
-                            If Subword <> "" Then
-                                UnknownParagraphs.Add(Subword)
-                            End If
-                        Next
-
-                    Next
-                End If
-                'Unknown Sentences
-                Dim UnknownSents As New List(Of String)
-                If UnknownParagraphs.Count > 0 Then
-                    For Each sent In UnknownParagraphs
-                        Dim Sents As List(Of String) = BasicTokenizer.TokenizeToSentence(sent)
-
-
-                        For Each item In Sents
-                            Subword = ""
-
-                            Subword += item
-                            If Vocabulary.ContainsKey(Subword.ToLower) Then
-                                ' If the subword is in the Vocabulary, add it to the list of subwords
-                                tokens.Add(Subword.ToLower)
-                                ' Reset the subword for the next iteration
-                                Subword = ""
-                            End If
-                            'Save unknowns
-                            If Subword <> "" Then
-                                UnknownSents.Add(Subword)
-                            End If
-                        Next
-                    Next
-                End If
-                'Unknown Words
-                Dim UnknownWords As New List(Of String)
-                If UnknownSents.Count > 0 Then
-                    For Each Word In UnknownSents
-                        Dim Words As List(Of String) = BasicTokenizer.TokenizeToWord(Word)
-                        For Each item In Words
-                            Subword = ""
-
-                            Subword += item
-                            If Vocabulary.ContainsKey(Subword.ToLower) Then
-                                ' If the subword is in the Vocabulary, add it to the list of subwords
-                                tokens.Add(Subword.ToLower)
-                                ' Reset the subword for the next iteration
-                                Subword = ""
-                            End If
-                            'Save unknowns
-                            If Subword <> "" Then
-                                UnknownWords.Add(Subword)
-                            End If
-                        Next
-
-                    Next
-
-                End If
-                'Unknown Words
-                Dim UnknownChars As New List(Of String)
-                If UnknownWords.Count > 0 Then
-                    For Each iChar In UnknownWords
-                        Dim Chars As List(Of String) = BasicTokenizer.TokenizeToCharacter(iChar)
-                        For Each item In Chars
-                            Subword = ""
-
-                            Subword += item
-                            If Vocabulary.ContainsKey(Subword.ToLower) Then
-                                ' If the subword is in the Vocabulary, add it to the list of subwords
-                                tokens.Add(Subword.ToLower)
-                                ' Reset the subword for the next iteration
-                                Subword = ""
-                            End If
-                            'Save unknowns
-                            If Subword <> "" Then
-                                UnknownChars.Add(Subword)
-                            End If
-                        Next
-
-                    Next
-
-                End If
-
-                For Each unkChar In UnknownChars
-                    Vocabulary.Add(unkChar, 1)
-                Next
-
-                Console.WriteLine("Recognized Tokens")
-                For Each tok In tokens
-                    Console.WriteLine("Token =" & tok)
-                Next
-
-                Console.WriteLine("UnRecognized Tokens")
-                For Each tok In UnknownChars
-                    Console.WriteLine("Token =" & tok)
-                Next
-                Return tokens
-            End Function
-
-            Public Sub Train(corpus As List(Of String), MaxMergeOperations As Integer)
-                ' Initialize the vocabulary with word-level subword units
-                Tokenize(corpus)
-                Dim mergeOperationsCount As Integer = 0
-
-                While mergeOperationsCount < MaxMergeOperations
-                    ' Compute the frequency of subword units in the vocabulary
-                    Dim subwordFrequencies As New Dictionary(Of String, Integer)
-
-                    For Each subword In Vocabulary.Keys
-                        Dim subwordUnits = BasicTokenizer.TokenizeToCharacter(subword)
-                        For Each unit In subwordUnits
-                            If subwordFrequencies.ContainsKey(unit) Then
-                                subwordFrequencies(unit) += Vocabulary(subword)
-                            Else
-                                subwordFrequencies.Add(unit, Vocabulary(subword))
-                            End If
-                        Next
-                    Next
-
-                    ' Find the most frequent pair of subword units
-                    Dim mostFrequentPair As KeyValuePair(Of String, Integer) = subwordFrequencies.OrderByDescending(Function(pair) pair.Value).FirstOrDefault()
-
-                    If mostFrequentPair.Value < 2 Then
-                        ' Stop merging if the frequency of the most frequent pair is less than 2
-                        Exit While
-                    End If
-
-                    ' Merge the most frequent pair into a new subword unit
-                    Dim newSubwordUnit = mostFrequentPair.Key
-
-                    ' Update the vocabulary by replacing occurrences of the merged subword pair with the new subword unit
-                    Dim updatedVocabulary As New Dictionary(Of String, Integer)
-
-                    For Each subword In Vocabulary.Keys
-                        Dim mergedSubword = subword.Replace(mostFrequentPair.Key, newSubwordUnit)
-                        updatedVocabulary(mergedSubword) = Vocabulary(subword)
-                    Next
-
-                    Vocabulary = updatedVocabulary
-                    mergeOperationsCount += 1
-
-                End While
-
-            End Sub
-
-            Public Class BasicTokenizer
-
-                Public Shared Function TokenizeToCharacter(Document As String) As List(Of String)
-                    Document = Document.ToLower()
-                    Dim characters As Char() = Document.ToCharArray()
-                    TokenizeToCharacter = New List(Of String)
-                    For Each item In characters
-                        TokenizeToCharacter.Add(item)
-                    Next
-                End Function
-
-                Public Shared Function TokenizeToWord(Document As String) As List(Of String)
-                    Document = Document.ToLower()
-                    Document = Document.SpacePunctuation
-                    Return Document.Split({" ", ".", ",", ";", ":", "!", "?"}, StringSplitOptions.RemoveEmptyEntries).ToList
-                End Function
-
-                Public Shared Function TokenizeToSentence(Document As String) As List(Of String)
-                    Document = Document.ToLower()
-                    Document = Document.SpacePunctuation
-                    Return Split(Document, ".").ToList
-                End Function
-
-                Public Shared Function TokenizeToParagraph(Document As String) As List(Of String)
-                    Document = Document.ToLower()
-
-                    Return Split(Document, vbNewLine).ToList
-                End Function
-
-            End Class
-
-        End Class
-        Public Class TokenizerPositional
-            Private iStopWords As List(Of String)
-
-            Private Function RemoveStopWords(ByVal tokens As List(Of Token)) As List(Of Token)
-                Return tokens.Where(Function(token) Not StopWords.Contains(token.Value)).ToList()
-            End Function
-            Public Property StopWordRemovalEnabled As Boolean
-
-            Public Property StopWords As List(Of String)
-                Get
-                    Return iStopWords
-                End Get
-                Set(value As List(Of String))
-                    iStopWords = value
-                End Set
-            End Property
-            Public Structure Token
-                ''' <summary>
-                ''' Initializes a new instance of the Token structure.
-                ''' </summary>
-                ''' <param name="type">The type of the token.</param>
-                ''' <param name="value">The string value of the token.</param>
-                Public Sub New(ByVal type As String, ByVal value As String)
-                    Me.Type = type
-                    Me.Value = value
-                End Sub
-
-                Public Sub New(ByVal type As TokenType, ByVal value As String, ByVal startPosition As Integer, ByVal endPosition As Integer)
-                    Me.Type = type
-                    Me.Value = value
-                    Me.StartPosition = startPosition
-                    Me.EndPosition = endPosition
-                End Sub
-
-                Public Property EndPosition As Integer
-                Public Property StartPosition As Integer
-                Public Property Type As TokenType
-                Public Property Value As String
-            End Structure
-
-            ''' <summary>
-            ''' Returns Tokens With Positions
-            ''' </summary>
-            ''' <param name="input"></param>
-            ''' <returns></returns>
-            Public Shared Function TokenizeByCharacter(ByVal input As String) As List(Of Token)
-                Dim characters As Char() = input.ToCharArray()
-                Dim tokens As New List(Of Token)
-                Dim currentPosition As Integer = 0
-
-                For Each character As Char In characters
-                    Dim startPosition As Integer = currentPosition
-                    Dim endPosition As Integer = currentPosition
-                    Dim token As New Token(TokenType.Character, character.ToString(), startPosition, endPosition)
-                    tokens.Add(token)
-                    currentPosition += 1
-                Next
-
-                Return tokens
-            End Function
-
-            ''' <summary>
-            ''' Returns Tokens With Positions
-            ''' </summary>
-            ''' <param name="input"></param>
-            ''' <returns></returns>
-            Public Shared Function TokenizeBySentence(ByVal input As String) As List(Of Token)
-                Dim sentences As String() = input.Split("."c)
-                Dim tokens As New List(Of Token)
-                Dim currentPosition As Integer = 0
-
-                For Each sentence As String In sentences
-                    Dim startPosition As Integer = currentPosition
-                    Dim endPosition As Integer = currentPosition + sentence.Length - 1
-                    Dim token As New Token(TokenType.Sentence, sentence, startPosition, endPosition)
-                    tokens.Add(token)
-                    currentPosition = endPosition + 2 ' Account for the period and the space after the sentence
-                Next
-
-                Return tokens
-            End Function
-
-            ''' <summary>
-            ''' Returns Tokens With Positions
-            ''' </summary>
-            ''' <param name="input"></param>
-            ''' <returns></returns>
-            Public Shared Function TokenizeByWord(ByVal input As String) As List(Of Token)
-                Dim words As String() = input.Split(" "c)
-                Dim tokens As New List(Of Token)
-                Dim currentPosition As Integer = 0
-
-                For Each word As String In words
-                    Dim startPosition As Integer = currentPosition
-                    Dim endPosition As Integer = currentPosition + word.Length - 1
-                    Dim token As New Token(TokenType.Word, word, startPosition, endPosition)
-                    tokens.Add(token)
-                    currentPosition = endPosition + 2 ' Account for the space between words
-                Next
-
-                Return tokens
-            End Function
-
-            ''' <summary>
-            ''' Pure basic Tokenizer to Tokens
-            ''' </summary>
-            ''' <param name="Corpus"></param>
-            ''' <param name="tokenizationOption">Type Of Tokenization</param>
-            ''' <returns></returns>
-            Public Shared Function TokenizeInput(ByRef Corpus As List(Of String), tokenizationOption As TokenizerType) As List(Of Token)
-                Dim ivocabulary As New List(Of Token)
-
-                For Each Doc In Corpus
-                    Select Case tokenizationOption
-                        Case TokenizerType._Char
-                            ivocabulary.AddRange(TokenizeByCharacter(Doc.ToLower))
-                        Case TokenizerType._Word
-                            ivocabulary.AddRange(TokenizeByWord(Doc.ToLower))
-                        Case TokenizerType._Sentence
-                            ivocabulary.AddRange(TokenizeBySentence(Doc.ToLower))
-
-
-                    End Select
-                Next
-
-                Return ivocabulary
-            End Function
-
-        End Class
-        Public Class TokenizerTokenID
-            Public TokenToId As New Dictionary(Of String, Integer)
-            Private idToToken As New Dictionary(Of Integer, String)
-            Private nextId As Integer = 0
-
-            Private vocab As New Dictionary(Of String, Integer)
-            Public Sub New(ByRef Vocabulary As Dictionary(Of String, Integer))
-                vocab = Vocabulary
-                TokenToId = New Dictionary(Of String, Integer)
-                idToToken = New Dictionary(Of Integer, String)
-            End Sub
-
-            ''' <summary>
-            ''' Pure Tokenizer (will tokenize based on the Tokenizer model settings)
-            ''' </summary>
-            ''' <param name="text"></param>
-            ''' <returns></returns>
-            Public Function TokenizeToTokenIDs(text As String) As List(Of Integer)
-                Dim tokens = TokenizerPositional.TokenizeByWord(text)
-                Dim tokenIds As New List(Of Integer)
-
-                For Each itoken In tokens
-                    Dim tokenId As Integer
-                    If TokenToId.ContainsKey(itoken.Value) Then
-                        tokenId = TokenToId(itoken.Value)
-                    Else
-                        'Not registered
-
-                        tokenId = TokenToId(itoken.Value)
-
-                    End If
-                    tokenIds.Add(tokenId)
-
-                Next
-
-                Return tokenIds
-            End Function
-
-            Private Sub AddTokenID(text As String)
-
-                If Not vocab.ContainsKey(text) Then
-                    vocab(text) = nextId
-                    nextId += 1
-                    TokenToId = vocab.ToDictionary(Function(x) x.Key, Function(x) x.Value)
-                    idToToken = TokenToId.ToDictionary(Function(x) x.Value, Function(x) x.Key)
-                End If
-
-
-            End Sub
-
-            ''' <summary>
-            ''' Given  a Set of Token ID Decode the Tokens 
-            ''' </summary>
-            ''' <param name="tokenIds"></param>
-            ''' <returns></returns>
-            Public Function Detokenize(tokenIds As List(Of Integer)) As String
-                Dim tokens As New List(Of String)
-
-                For Each tokenId As Integer In tokenIds
-                    tokens.Add(idToToken(tokenId))
-                Next
-
-                Return String.Join(" ", tokens)
-            End Function
-        End Class
-
-
-        Public Class Tokenizer
-            Public Property Vocabulary As Dictionary(Of String, Integer)
-            Public ReadOnly Property PairFrequencies As Dictionary(Of String, Integer) = ComputePairFrequencies()
-            Public ReadOnly Property maxSubwordLen As Integer = Me.Vocabulary.Max(Function(token) token.Key.Length)
-            Private ReadOnly unkToken As String = "<Unk>"
-            ''' <summary>
-            ''' Defines max entries in vocabulary before Pruning Rare Words
-            ''' </summary>
-            ''' <returns></returns>
-            Public Property VocabularyPruneValue As Integer = 100000
-
-            Public Sub New()
-                Vocabulary = New Dictionary(Of String, Integer)
-
-            End Sub
-            Public Function GetVocabulary() As List(Of String)
-                Return Vocabulary.Keys.ToList()
-            End Function
-
-            Public Sub New(vocabulary As Dictionary(Of String, Integer), Optional vocabularyPruneValue As Integer = 1000000)
-                Me.Vocabulary = vocabulary
-                Me.VocabularyPruneValue = vocabularyPruneValue
-            End Sub
-
-            Private Function TokenizeWordPiece(text As String) As List(Of String)
-                Dim tokens As New List(Of String)
-                Dim pos As Integer = 0
-
-                While pos < text.Length
-                    Dim foundSubword As Boolean = False
-                    Dim subword As String = ""
-
-                    For subwordLen As Integer = Math.Min(Me.maxSubwordLen, text.Length - pos) To 1 Step -1
-                        subword = text.Substring(pos, subwordLen)
-
-                        If Vocabulary.Keys.Contains(subword) Then
-                            tokens.Add(subword)
-                            pos += subwordLen
-                            foundSubword = True
-                            Exit For
-                        End If
-                    Next
-
-                    ' If no subword from the vocabulary matches, split into WordPiece tokens
-                    If Not foundSubword Then
-                        Dim wordPieceTokens As List(Of String) = TokenizeBitWord(subword)
-                        tokens.AddRange(wordPieceTokens)
-                        UpdateVocabulary(subword)
-                        pos += subword.Length
-                    End If
-                End While
-
-                Return tokens
-            End Function
-            Private Function TokenizeBitWord(subword As String) As List(Of String)
-                Dim wordPieceTokens As New List(Of String)
-                Dim startIdx As Integer = 0
-
-                While startIdx < subword.Length
-                    Dim endIdx As Integer = subword.Length
-                    Dim foundSubword As Boolean = False
-
-                    While startIdx < endIdx
-                        Dim candidate As String = subword.Substring(startIdx, endIdx - startIdx)
-                        Dim isLast = endIdx = subword.Length
-
-                        If Vocabulary.Keys.Contains(candidate) OrElse isLast Then
-                            wordPieceTokens.Add(candidate)
-                            startIdx = endIdx
-                            foundSubword = True
-                            Exit While
-                        End If
-
-                        endIdx -= 1
-                    End While
-
-                    ' If no subword from the vocabulary matches, break the subword into smaller parts
-                    If Not foundSubword Then
-                        wordPieceTokens.Add("<unk>")
-                        startIdx += 1
-                    End If
-                End While
-
-                Return wordPieceTokens
-            End Function
-            Private Shared Function TokenizeBitWord(subword As String, ByRef Vocab As Dictionary(Of String, Integer)) As List(Of String)
-
-                Dim wordPieceTokens As New List(Of String)
-                Dim startIdx As Integer = 0
-
-                While startIdx < subword.Length
-                    Dim endIdx As Integer = subword.Length
-                    Dim foundSubword As Boolean = False
-
-                    While startIdx < endIdx
-                        Dim candidate As String = subword.Substring(startIdx, endIdx - startIdx)
-                        Dim isLast = endIdx = subword.Length
-
-                        If Vocab.Keys.Contains(candidate) OrElse isLast Then
-                            wordPieceTokens.Add(candidate)
-                            startIdx = endIdx
-                            foundSubword = True
-                            Exit While
-                        End If
-
-                        endIdx -= 1
-                    End While
-
-                    ' If no subword from the vocabulary matches, break the subword into smaller parts
-                    If Not foundSubword Then
-                        wordPieceTokens.Add("<unk>")
-                        startIdx += 1
-                    End If
-                End While
-
-                Return wordPieceTokens
-            End Function
-
-            Private Function TokenizeBPE(ByVal text As String) As List(Of String)
-                Dim tokens As New List(Of String)
-
-                While text.Length > 0
-                    Dim foundToken As Boolean = False
-
-                    ' Find the longest token in the vocabulary that matches the start of the text
-                    For Each subword In Vocabulary.OrderByDescending(Function(x) x.Key.Length)
-                        If text.StartsWith(subword.Key) Then
-                            tokens.Add(subword.Key)
-                            text = text.Substring(subword.Key.Length)
-                            foundToken = True
-                            Exit For
-                        End If
-                    Next
-
-                    ' If no token from the vocabulary matches, break the text into subwords
-                    If Not foundToken Then
-                        Dim subwordFound As Boolean = False
-                        Dim subword As String = ""
-                        ' Divide the text into subwords starting from the longest possible length
-                        For length = Math.Min(text.Length, 20) To 1 Step -1
-                            subword = text.Substring(0, length)
-
-                            ' Check if the subword is in the vocabulary
-                            If Vocabulary.Keys(subword) Then
-                                tokens.Add(subword)
-                                text = text.Substring(length)
-                                subwordFound = True
-                                Exit For
-                            End If
-                        Next
-
-                        ' If no subword from the vocabulary matches,
-                        'Learn On the fly, But 
-                        If Not subwordFound Then
-                            '    Throw New Exception("Unrecognized subword in the text.")
-                            tokens.AddRange(TokenizeBitWord(unkToken & subword))
-                            UpdateVocabulary(subword)
-
-                        End If
-                    End If
-                End While
-
-                Return tokens
-            End Function
-            Private Class NgramTokenizer
-
-                Public Shared Function TokenizetoCharacter(Document As String, n As Integer) As List(Of String)
-                    TokenizetoCharacter = New List(Of String)
-                    Document = Document.ToLower()
-                    Document = Document.SpacePunctuation
-
-                    ' Generate character n-grams
-                    For i As Integer = 0 To Document.Length - n
-                        Dim ngram As String = Document.Substring(i, n)
-                        TokenizetoCharacter.Add(ngram)
-                    Next
-
-                End Function
-
-                Public Shared Function TokenizetoWord(ByRef text As String, n As Integer) As List(Of String)
-                    TokenizetoWord = New List(Of String)
-                    text = text.ToLower()
-                    text = text.SpacePunctuation
-
-                    ' Split the clean text into individual words
-                    Dim words() As String = text.Split({" ", ".", ",", ";", ":", "!", "?"}, StringSplitOptions.RemoveEmptyEntries)
-
-                    ' Generate n-grams from the words
-                    For i As Integer = 0 To words.Length - n
-                        Dim ngram As String = String.Join(" ", words.Skip(i).Take(n))
-                        TokenizetoWord.Add(ngram)
-                    Next
-
-                End Function
-
-                Public Shared Function TokenizetoParagraph(text As String, n As Integer) As List(Of String)
-                    TokenizetoParagraph = New List(Of String)
-
-                    ' Split the text into paragraphs
-                    Dim paragraphs() As String = text.Split({Environment.NewLine & Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries)
-
-                    ' Generate paragraph n-grams
-                    For i As Integer = 0 To paragraphs.Length - n
-                        Dim ngram As String = String.Join(Environment.NewLine & Environment.NewLine, paragraphs.Skip(i).Take(n))
-                        TokenizetoParagraph.Add(ngram)
-                    Next
-
-                    Return TokenizetoParagraph
-                End Function
-
-                Public Shared Function TokenizetoSentence(text As String, n As Integer) As List(Of String)
-                    Dim tokens As New List(Of String)
-
-                    ' Split the text into Clauses
-                    Dim Clauses() As String = text.Split({".", ",", ";", ":", "!", "?"}, StringSplitOptions.RemoveEmptyEntries)
-
-                    ' Generate sentence n-grams
-                    For i As Integer = 0 To Clauses.Length - n
-                        Dim ngram As String = String.Join(" ", Clauses.Skip(i).Take(n))
-                        tokens.Add(ngram)
-                    Next
-
-                    Return tokens
-                End Function
-
-            End Class
-            Private Class BasicTokenizer
-
-                Public Shared Function TokenizeToCharacter(Document As String) As List(Of String)
-                    TokenizeToCharacter = New List(Of String)
-                    Document = Document.ToLower()
-                    For i = 0 To Document.Length - 1
-                        TokenizeToCharacter.Add(Document(i))
-                    Next
-                End Function
-
-                Public Shared Function TokenizeToWord(Document As String) As List(Of String)
-                    Document = Document.ToLower()
-                    Document = Document.SpacePunctuation
-                    Return Document.Split({" ", ".", ",", ";", ":", "!", "?"}, StringSplitOptions.RemoveEmptyEntries).ToList
-                End Function
-
-                Public Shared Function TokenizeToSentence(Document As String) As List(Of String)
-                    Document = Document.ToLower()
-                    Document = Document.SpacePunctuation
-                    Return Split(Document, ".").ToList
-                    Return Document.Split({".", ",", ";", ":", "!", "?"}, StringSplitOptions.RemoveEmptyEntries).ToList
-                End Function
-
-                Public Shared Function TokenizeToParagraph(Document As String) As List(Of String)
-                    Document = Document.ToLower()
-                    Return Split(Document, vbNewLine).ToList
-                End Function
-
-            End Class
-            Public Sub Add_Vocabulary(initialVocabulary As List(Of String))
-
-                For Each word In initialVocabulary
-
-                    UpdateVocabulary(word)
-
-                Next
-
-            End Sub
-            Public Sub Initialize_Vocabulary(initialVocabulary As List(Of String), n As Integer)
-
-                For Each word In initialVocabulary
-                    For i As Integer = 0 To word.Length - n
-                        UpdateVocabulary(word.Substring(i, n))
-                    Next
-                Next
-
-            End Sub
-            Private Function ComputePairFrequencies() As Dictionary(Of String, Integer)
-                Dim pairFrequencies As Dictionary(Of String, Integer) = New Dictionary(Of String, Integer)
-
-                For Each token As String In Vocabulary.Keys
-                    Dim tokenChars As List(Of Char) = token.ToList()
-
-                    For i As Integer = 0 To tokenChars.Count - 2
-                        Dim pair As String = tokenChars(i) & tokenChars(i + 1)
-
-                        If Not pairFrequencies.ContainsKey(pair) Then
-                            pairFrequencies.Add(pair, Vocabulary(token))
-                        Else
-                            Dim value = pairFrequencies(pair)
-                            value += Vocabulary(token)
-                            pairFrequencies.Remove(pair)
-                            pairFrequencies.Add(pair, value)
-
-
-                        End If
-                    Next
-                Next
-
-                Return pairFrequencies
-            End Function
-
-            Private Sub UpdateFrequencyDictionary(mergedSubword As String)
-                PairFrequencies.Remove("")
-                For i As Integer = 0 To mergedSubword.Length - 2
-                    Dim bigram As String = mergedSubword.Substring(i, 2)
-                    If PairFrequencies.ContainsKey(bigram) Then
-                        PairFrequencies(bigram) += 1
-                    Else
-                        PairFrequencies.Add(bigram, 1)
-                    End If
-                Next
-            End Sub
-            Public Sub UpdateVocabulary(ByRef Term As String)
-                If Vocabulary.Keys.Contains(Term) = True Then
-                    Dim value = Vocabulary(Term)
-                    value += 1
-                    Vocabulary.Remove(Term)
-                    Vocabulary.Add(Term, value)
-                Else
-                    Vocabulary.Add(Term, 1)
-                End If
-
-            End Sub
-            Public Shared Function UpdateCorpusWithMergedToken(ByRef corpus As List(Of String), pair As String) As List(Of String)
-                ' Update the text corpus with the merged token for the next iteration.
-                Return corpus.ConvertAll(Function(text) text.Replace(pair, pair.Replace(" ", "_")))
-            End Function
-            Public Sub Prune(pruningThreshold As Integer)
-
-                Dim minimumVocabularySize As Integer = VocabularyPruneValue
-                If Vocabulary.Count > minimumVocabularySize Then
-                    PruneVocabulary(pruningThreshold)
-                End If
-
-            End Sub
-            Private Sub PruneVocabulary(threshold As Integer)
-                ' Create a list to store tokens to be removed.
-                Dim tokensToRemove As New List(Of String)
-
-                ' Iterate through the vocabulary and identify tokens to prune.
-                For Each token In Vocabulary
-                    Dim tokenId As Integer = token.Value
-                    Dim tokenFrequency As Integer = Vocabulary(token.Key)
-
-                    ' Prune the token if it has frequency below the threshold (1) and is not recent (has a lower ID).
-                    If tokenFrequency <= threshold AndAlso tokenId < Vocabulary.Count - 1 Then
-                        tokensToRemove.Add(token.Key)
-                    End If
-                Next
-
-                ' Remove the identified tokens from the vocabulary.
-                For Each tokenToRemove In tokensToRemove
-                    Vocabulary.Remove(tokenToRemove)
-                Next
-
-                Console.WriteLine("Pruning completed. Vocabulary size after pruning: " & Vocabulary.Count)
-                Console.ReadLine()
-            End Sub
-            Public Sub Train(text As String, Epochs As Integer)
-                ' Tokenize the text into individual characters
-
-                Dim Bits As List(Of String) = TokenizeBitWord(text)
-                For Each bit As String In Bits
-                    UpdateVocabulary(bit)
-                Next
-
-
-                ' Train BPE using merging strategy
-                Dim numMerges As Integer = Epochs ' Define the number of merges, you can adjust it as needed
-                For mergeIndex As Integer = 0 To numMerges - 1
-                    MergeMostFrequentBigram()
-                    MergeMostFrequentPair(FindMostFrequentPair.Key)
-                Next
-
-                Prune(1)
-            End Sub
-            Public Function Tokenize(singleDocument As String, isWordPiece As Boolean) As List(Of String)
-                ' Tokenize the document using the current vocabulary.
-                Dim tokens As List(Of String) = If(isWordPiece, Tokenize(singleDocument, True), Tokenize(singleDocument, False))
-                If tokens.Contains(unkToken) = True Then
-                    tokens = TrainAndTokenize(singleDocument, isWordPiece, 1)
-                End If
-                Return tokens
-            End Function
-            Private Function TrainAndTokenize(singleDocument As String, isWordPiece As Boolean, Epochs As Integer) As List(Of String)
-                ' Tokenize the document using the current vocabulary.
-                Dim tokens As List(Of String) = If(isWordPiece, Tokenize(singleDocument, True), Tokenize(singleDocument, False))
-
-                ' Train the tokenizer using the same document.
-                If isWordPiece Then
-                    TrainWordPiece(singleDocument, Epochs)
-                Else
-                    TrainBPE(singleDocument, Epochs)
-                End If
-
-                ' Re-tokenize the document with the updated vocabulary.
-                Return If(isWordPiece, TokenizeWordPiece(singleDocument), TokenizeBPE(singleDocument))
-            End Function
-            Public Sub Train(text As String, isWordPiece As Boolean, Epochs As Integer)
-                If isWordPiece Then
-                    TrainWordPiece(text, Epochs)
-                Else
-                    TrainBPE(text, Epochs)
-                End If
-                Prune(1)
-            End Sub
-            Private Sub TrainWordPiece(text As String, Epochs As Integer)
-                ' Tokenize the text into individual characters
-                Dim Bits As List(Of String) = TokenizeWordPiece(text)
-                For Each bit As String In Bits
-                    UpdateVocabulary(bit)
-                Next
-
-                ' Train WordPiece using merging strategy
-                Dim numMerges As Integer = Epochs ' Define the number of merges, you can adjust it as needed
-                For mergeIndex As Integer = 0 To numMerges - 1
-                    MergeMostFrequentBigram()
-                    MergeMostFrequentPair(FindMostFrequentPair.Key)
-                Next
-            End Sub
-            Private Sub TrainBPE(text As String, Epochs As Integer)
-                ' Tokenize the text into individual characters
-                Dim Bits As List(Of String) = TokenizeBPE(text)
-                For Each bit As String In Bits
-                    UpdateVocabulary(bit)
-                Next
-
-                ' Train BPE using merging strategy
-                Dim numMerges As Integer = Epochs ' Define the number of merges, you can adjust it as needed
-                For mergeIndex As Integer = 0 To numMerges - 1
-                    MergeMostFrequentBigram()
-                    MergeMostFrequentPair(FindMostFrequentPair.Key)
-                Next
-            End Sub
-            Private Function FindMostFrequentPair() As KeyValuePair(Of String, Integer)
-                ' Find the most frequent character pair from the frequency counts.
-                Return PairFrequencies.Aggregate(Function(x, y) If(x.Value > y.Value, x, y))
-            End Function
-            Private Sub MergeMostFrequentPair(pair As String)
-                ' Merge the most frequent character pair into a new subword unit.
-                Dim mergedToken As String = pair.Replace(" ", "_")
-                UpdateVocabulary(mergedToken)
-
-            End Sub
-            Private Sub MergeMostFrequentBigram()
-                Dim mostFrequentBigram As String = GetMostFrequentBigram()
-                If mostFrequentBigram IsNot Nothing Then
-                    Dim mergedSubword As String = mostFrequentBigram.Replace("", " ")
-
-                    UpdateVocabulary(mergedSubword)
-
-                End If
-            End Sub
-            Private Function GetMostFrequentBigram() As String
-                Dim mostFrequentBigram As String = Nothing
-                Dim maxFrequency As Integer = 0
-
-                For Each bigram In PairFrequencies.Keys
-                    If PairFrequencies(bigram) > maxFrequency Then
-                        mostFrequentBigram = bigram
-                        maxFrequency = PairFrequencies(bigram)
-                    End If
-                Next
-
-                Return mostFrequentBigram
-            End Function
-
-            Public Shared Function FindFrequentCharacterBigrams(Vocab As List(Of String), ByRef Freq_Threshold As Integer) As List(Of String)
-                Dim bigramCounts As New Dictionary(Of String, Integer)
-
-                For Each word In Vocab
-                    Dim characters As Char() = word.ToCharArray()
-
-                    For i As Integer = 0 To characters.Length - 2
-                        Dim bigram As String = characters(i) & characters(i + 1)
-
-                        If bigramCounts.ContainsKey(bigram) Then
-                            bigramCounts(bigram) += 1
-                        Else
-                            bigramCounts.Add(bigram, 1)
-                        End If
-                    Next
-                Next
-
-                Dim frequentCharacterBigrams As New List(Of String)
-
-                For Each pair In bigramCounts
-                    If pair.Value > Freq_Threshold Then ' Adjust the threshold as needed
-                        frequentCharacterBigrams.Add(pair.Key)
-                    End If
-                Next
-
-                Return frequentCharacterBigrams
-            End Function
-            Public Shared Function GetHighFreq(ByRef Vocabulary As Dictionary(Of String, Integer), ByRef Threshold As Integer) As List(Of String)
-                Dim HighFreq As New List(Of String)
-                For Each item In Vocabulary
-                    If item.Value > Threshold Then
-                        HighFreq.Add(item.Key)
-                    End If
-                Next
-                Return HighFreq
-            End Function
-            Public Shared Function TokenizeToCharacter(text As String) As List(Of String)
-                Return BasicTokenizer.TokenizeToCharacter(text)
-            End Function
-            Public Shared Function TokenizeToWord(text As String) As List(Of String)
-                Return BasicTokenizer.TokenizeToWord(text)
-            End Function
-            Public Shared Function TokenizeToSentence(text As String) As List(Of String)
-                Return BasicTokenizer.TokenizeToSentence(text)
-            End Function
-            Public Shared Function TokenizeToSentenceGram(text As String, ByRef n As Integer) As List(Of String)
-                Return NgramTokenizer.TokenizetoSentence(text, n)
-            End Function
-            Public Shared Function TokenizeToWordGram(text As String, ByRef n As Integer) As List(Of String)
-                Return NgramTokenizer.TokenizetoWord(text, n)
-            End Function
-            Public Shared Function TokenizeToNGram(text As String, ByRef n As Integer) As List(Of String)
-                Return NgramTokenizer.TokenizetoCharacter(text, n)
-            End Function
-            Public Shared Function TokenizeToBitWord(text As String, ByRef Vocab As Dictionary(Of String, Integer)) As List(Of String)
-                Dim Words = Tokenizer.TokenizeToWord(text)
-                Dim Tokens As New List(Of String)
-                For Each item In Words
-                    Tokens.AddRange(TokenizeBitWord(item, Vocab))
-                Next
-                Return Tokens
-            End Function
-        End Class
-    End Namespace
     Namespace MatrixModels
+        <Serializable>
         Public Class PMI
             ''' <summary>
             ''' Calculates the Pointwise Mutual Information (PMI) matrix for the trained model.
@@ -2000,6 +576,7 @@ PROC_ERR:
         ''' <summary>
         ''' Returns a list WordGram Probability Given a Sequence of Tokens 
         ''' </summary>
+        <Serializable>
         Public Class Wordgram
             Private n As Integer
             Public Shared Sub Main()
@@ -2184,6 +761,7 @@ PROC_ERR:
 
 
         End Class
+        <Serializable>
         Public Class Co_Occurrence_Matrix
             Public Shared Function PrintOccurrenceMatrix(ByRef coOccurrenceMatrix As Dictionary(Of String, Dictionary(Of String, Integer)), entityList As List(Of String)) As String
                 ' Prepare the header row
@@ -2331,6 +909,7 @@ PROC_ERR:
 
 
         End Class
+        <Serializable>
         Public Class Word2WordMatrix
             Private matrix As Dictionary(Of String, Dictionary(Of String, Integer))
 
@@ -2462,7 +1041,20 @@ PROC_ERR:
                 Return matrix
             End Function
         End Class
+        <Serializable>
+        Public Class ConditionalProbabilityTable
+            Public Property Node As BeliefNode
+            Public Property Values As Dictionary(Of List(Of String), Double)
 
+            Public Sub New(node As BeliefNode)
+                Me.Node = node
+                Values = New Dictionary(Of List(Of String), Double)
+            End Sub
+
+            Public Sub SetEntry(parentStates As List(Of String), value As Double)
+                Values(parentStates) = value
+            End Sub
+        End Class
     End Namespace
     Namespace Readers
         Public Class WordListReader
@@ -2956,6 +1548,7 @@ PROC_ERR:
 
     End Namespace
     Namespace VocabularyModelling
+        <Serializable>
         Public Class VocabularyBuilder
             Private embeddingMatrix As Double(,)
             Private embeddingSize As Integer
@@ -3268,6 +1861,7 @@ PROC_ERR:
             End Function
 
         End Class
+        <Serializable>
         Public Class VocabularyGenerator
 
             Public Shared Function CreateDictionaryVocabulary(data As List(Of String)) As HashSet(Of String)
@@ -3580,6 +2174,7 @@ Namespace EncoderDecoders
     '''    DecodeSentenceStr: Decodes a list Of positional embeddings And returns the corresponding String tokens As a list Of strings.
     '''    DecodeSentenceEmbedding: Decodes a list Of positional embeddings And returns the corresponding token embeddings As a list Of lists Of doubles.
     '''     </summary>
+    <Serializable>
     Public Class PositionalEncoderDecoder
         Private encodingMatrix As List(Of List(Of Double))
         Private Vocabulary As New List(Of String)
@@ -3709,73 +2304,130 @@ Namespace EncoderDecoders
 
 End Namespace
 Namespace Utilitys
-    Public Module TextProcessingTasks
-
-        <Runtime.CompilerServices.Extension()>
-        Public Function PerformTasks(ByRef Txt As String, ByRef Tasks As List(Of TextPreProcessingTasks)) As String
-
-            For Each tsk In Tasks
-                Select Case tsk
-
-                    Case TextPreProcessingTasks.Space_Punctuation
-
-                        Txt = SpacePunctuation(Txt).Replace("  ", " ")
-                    Case TextPreProcessingTasks.To_Upper
-                        Txt = Txt.ToUpper.Replace("  ", " ")
-                    Case TextPreProcessingTasks.To_Lower
-                        Txt = Txt.ToLower.Replace("  ", " ")
-                    Case TextPreProcessingTasks.Lemmatize_Text
-                    Case TextPreProcessingTasks.Tokenize_Characters
-                        Txt = TokenizeChars(Txt)
-                        Dim Words() As String = Txt.Split(",")
-                        Txt &= vbNewLine & "Total Tokens in doc  -" & Words.Count - 1 & ":" & vbNewLine
-                    Case TextPreProcessingTasks.Remove_Stop_Words
-                        TextExtensions.RemoveStopWords(Txt)
-                    Case TextPreProcessingTasks.Tokenize_Words
-                        Txt = TokenizeWords(Txt)
-                        Dim Words() As String = Txt.Split(",")
-                        Txt &= vbNewLine & "Total Tokens in doc  -" & Words.Count - 1 & ":" & vbNewLine
-                    Case TextPreProcessingTasks.Tokenize_Sentences
-                        Txt = TokenizeSentences(Txt)
-                        Dim Words() As String = Txt.Split(",")
-                        Txt &= vbNewLine & "Total Tokens in doc  -" & Words.Count - 2 & ":" & vbNewLine
-                    Case TextPreProcessingTasks.Remove_Symbols
-                        Txt = RemoveSymbols(Txt).Replace("  ", " ")
-                    Case TextPreProcessingTasks.Remove_Brackets
-                        Txt = RemoveBrackets(Txt).Replace("  ", " ")
-                    Case TextPreProcessingTasks.Remove_Maths_Symbols
-                        Txt = RemoveMathsSymbols(Txt).Replace("  ", " ")
-                    Case TextPreProcessingTasks.Remove_Punctuation
-                        Txt = RemovePunctuation(Txt).Replace("  ", " ")
-                    Case TextPreProcessingTasks.AlphaNumeric_Only
-                        Txt = AlphaNumericOnly(Txt).Replace("  ", " ")
-                End Select
-            Next
-
-            Return Txt
-        End Function
-
-        Public Enum TextPreProcessingTasks
-            Space_Punctuation
-            To_Upper
-            To_Lower
-            Lemmatize_Text
-            Tokenize_Characters
-            Remove_Stop_Words
-            Tokenize_Words
-            Tokenize_Sentences
-            Remove_Symbols
-            Remove_Brackets
-            Remove_Maths_Symbols
-            Remove_Punctuation
-            AlphaNumeric_Only
-        End Enum
-
-    End Module
 
 End Namespace
 Public Module Extensions
+    <Extension>
+    Public Sub ModelExporter(ByRef Model As Object, Filename As String)
+        Dim path As String = Application.StartupPath
 
+        Dim FileStream As New System.IO.FileStream(Filename, System.IO.FileMode.CreateNew)
+        Dim Formatter As New BinaryFormatter
+        Formatter.Serialize(Model, FileStream)
+        FileStream.Close()
+
+
+    End Sub
+
+
+
+
+    ''' <summary>
+    ''' Extracts words between  based on the before and after words
+    ''' IE: THe cat sat on the mat (before The After The) output: cat sat on
+    ''' </summary>
+    ''' <param name="sentence"></param>
+    ''' <param name="beforeWord"></param>
+    ''' <param name="afterWord"></param>
+    ''' <returns></returns>
+    <Extension>
+    Public Function ExtractWordsBetween(sentence As String, beforeWord As String, afterWord As String) As List(Of String)
+        Dim words As New List(Of String)()
+
+        Dim sentenceWords As String() = sentence.Split(" "c)
+        Dim startIndex As Integer = -1
+        Dim endIndex As Integer = -1
+
+        ' Find the starting and ending indices of the target words
+        For i As Integer = 0 To sentenceWords.Length - 1
+            If sentenceWords(i).Equals(beforeWord, StringComparison.OrdinalIgnoreCase) Then
+                startIndex = i
+            End If
+
+            If sentenceWords(i).Equals(afterWord, StringComparison.OrdinalIgnoreCase) Then
+                endIndex = i
+            End If
+        Next
+
+        ' Extract words between the target words
+        If startIndex <> -1 AndAlso endIndex <> -1 AndAlso startIndex < endIndex Then
+            For i As Integer = startIndex + 1 To endIndex - 1
+                words.Add(sentenceWords(i))
+            Next
+        End If
+
+        Return words
+    End Function
+
+    <Extension>
+    Public Function StartsWithAny(str As String, values As IEnumerable(Of String)) As Boolean
+        For Each value As String In values
+            If str.StartsWith(value) Then
+                Return True
+            End If
+        Next
+
+        Return False
+    End Function
+
+
+    <Extension()>
+    Public Function StartsWithAny(ByVal input As String, ByVal values As String()) As Boolean
+        For Each value As String In values
+            If input.StartsWith(value, StringComparison.OrdinalIgnoreCase) Then
+                Return True
+            End If
+        Next
+        Return False
+    End Function
+
+
+
+    <Extension()>
+    Public Function ContainsAny(text As String, indicators As String()) As Boolean
+        For Each indicator As String In indicators
+            If text.Contains(indicator) Then
+                Return True
+            End If
+        Next
+
+        Return False
+    End Function
+
+
+
+
+    <Extension>
+    Public Function ModelImporter(ByRef Filename As String) As Object
+        Dim FileStream As New System.IO.FileStream(Filename, System.IO.FileMode.CreateNew)
+        Dim Formatter As New BinaryFormatter
+        Dim Model As Object = Formatter.Deserialize(FileStream)
+        FileStream.Close()
+
+        Return Model
+    End Function
+    ''' <summary>
+    ''' Writes the contents of an embedded resource embedded as Bytes to disk.
+    ''' </summary>
+    ''' <param name="BytesToWrite">Embedded resource</param>
+    ''' <param name="FileName">    Save to file</param>
+    ''' <remarks></remarks>
+    <System.Runtime.CompilerServices.Extension()>
+    Public Sub FileSave(ByVal BytesToWrite() As Byte, ByVal FileName As String)
+
+        If IO.File.Exists(FileName) Then
+            IO.File.Delete(FileName)
+        End If
+
+        Dim FileStream As New System.IO.FileStream(FileName, System.IO.FileMode.OpenOrCreate)
+        Dim BinaryWriter As New System.IO.BinaryWriter(FileStream)
+
+        BinaryWriter.Write(BytesToWrite)
+        BinaryWriter.Close()
+        FileStream.Close()
+    End Sub
+
+    <Extension>
     Public Function ConvertToDataTable(Of T)(ByVal list As IList(Of T)) As DataTable
         Dim table As New DataTable()
         Dim fields() = GetType(T).GetFields()
@@ -3791,7 +2443,7 @@ Public Module Extensions
         Next
         Return table
     End Function
-
+    <Extension>
     Public Function CreateDataTable(ByRef HeaderTitles As List(Of String)) As DataTable
         Dim DT As New DataTable
         For Each item In HeaderTitles
@@ -3878,7 +2530,7 @@ Public Module Extensions
         Dim Converter As New JavaScriptSerializer
         Return Converter.Serialize(iObject)
     End Function
-
+    <Extension>
     Function CalculateWordOverlap(tokens1 As String(), tokens2 As String()) As Integer
         Dim overlap As Integer = 0
 
@@ -3923,76 +2575,6 @@ Public Module Extensions
     End Enum
 
 
-    Public Class PunctuationMarkers
-        Public Shared ReadOnly SeperatorPunctuation() As String = {" ", ",", "|"}
-        Public Shared ReadOnly Symbols() As String = {"@", "#", "$", "%", "&", "*", "+", "=", "^", "_", "~", "§", "°", "¿", "¡"}
-        Public Shared ReadOnly EncapuslationPunctuationEnd() As String = {"}", "]", ">", ")"}
-        Public Shared ReadOnly EncapuslationPunctuationStart() As String = {"{", "[", "<", "("}
-        Public Shared ReadOnly GramaticalPunctuation() As String = {".", "?", "!", ":", ";", ","}
-        Public Shared ReadOnly MathPunctuation = New String() {"+", "-", "*", "/", "=", "<", ">", "≤", "≥", "±", "≈", "≠", "%", "‰", "‱", "^", "_", "√", "∛", "∜", "∫", "∬", "∭", "∮", "∯", "∰", "∇", "∂", "∆", "∏", "∑", "∐", "⨀", "⨁", "⨂", "⨃", "⨄", "∫", "∬", "∭", "∮", "∯", "∰", "∇", "∂", "∆", "∏", "∑", "∐", "⨀", "⨁", "⨂", "⨃", "⨄"}
-        Public Shared ReadOnly MoneyPunctuation() As String = {"$", "€", "£", "¥", "₹", "₽", "₿"}
-        Public Shared ReadOnly CodePunctuation() As String = {"\", "#", "@", "^"}
-
-        Public Shared ReadOnly Delimiters() As Char = {CType(" ", Char), CType(".", Char),
-                    CType(",", Char), CType("?", Char),
-                    CType("!", Char), CType(";", Char),
-                    CType(":", Char), Chr(10), Chr(13), vbTab}
-
-        Public ReadOnly Property SentenceEndPunctuation As List(Of String)
-            Get
-                Dim markers() As String = {".", ";", ":", "!", "?"}
-                Return markers.ToList
-            End Get
-        End Property
-
-        Public Shared ReadOnly Property Punctuation As List(Of String)
-            Get
-                Dim x As New List(Of String)
-                x.AddRange(SeperatorPunctuation)
-                x.AddRange(Symbols)
-                x.AddRange(EncapuslationPunctuationStart)
-                x.AddRange(EncapuslationPunctuationEnd)
-                x.AddRange(MoneyPunctuation)
-                x.AddRange(MathPunctuation)
-                x.AddRange(GramaticalPunctuation)
-                x.AddRange(CodePunctuation)
-                Return x.Distinct.ToList
-            End Get
-        End Property
-
-    End Class
-    Public Enum TokenType
-        GramaticalPunctuation
-        EncapuslationPunctuationStart
-        EncapuslationPunctuationEnd
-        MoneyPunctuation
-        MathPunctuation
-        CodePunctuation
-        AlphaBet
-        Number
-        Symbol
-        SeperatorPunctuation
-        Ignore
-        Word
-        Sentence
-        Character
-        Ngram
-        WordGram
-        SentenceGram
-        BitWord
-        Punctuation
-        whitespace
-    End Enum
-    Public Enum TokenizerType
-        _Char
-        _Word
-        _Sentence
-        _Paragraph
-        _BPE
-        _Wordpiece
-        _Token
-        _TokenID
-    End Enum
     Public Class RemoveToken
 
 
@@ -4450,7 +3032,7 @@ Public Module Extensions
                 Next
             Next
 
-            Return Tokenizer.GetHighFreq(NgramCounts, Freq_threshold)
+            Return GetHighFreqLst(NgramCounts, Freq_threshold)
         End Function
         Public Shared Function GetTokenGramCounts(Tokens As List(Of String), N As Integer) As Dictionary(Of String, Integer)
             Dim NgramCounts As New Dictionary(Of String, Integer)
@@ -4473,7 +3055,7 @@ Public Module Extensions
         Public Shared Function GetFrequentTokenNgrams(Tokens As List(Of String), N As Integer, ByRef Freq_threshold As Integer) As List(Of String)
             Dim NgramCounts As Dictionary(Of String, Integer) = GetTokenGramCounts(Tokens, N)
 
-            Dim frequentWordNgrams As List(Of String) = Tokenizer.GetHighFreq(NgramCounts, Freq_threshold)
+            Dim frequentWordNgrams As List(Of String) = GetHighFreqLst(NgramCounts, Freq_threshold)
 
             Return frequentWordNgrams
         End Function

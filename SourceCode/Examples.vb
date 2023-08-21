@@ -1,6 +1,8 @@
 ﻿Imports System.IO
 Imports System.Numerics
 Imports System.Windows.Forms
+Imports InputModelling.LanguageModels.BaseModels.LanguageModelFactory
+Imports InputModelling.LanguageModels.BaseModels.LanguageModelFactory.Corpus.Vocabulary
 Imports InputModelling.Models
 Imports InputModelling.Models.Chunkers
 Imports InputModelling.Models.Embeddings
@@ -16,13 +18,80 @@ Imports InputModelling.Models.Entailment.SentenceClassifier
 Imports InputModelling.Models.EntityModel
 Imports InputModelling.Models.Nodes
 Imports InputModelling.Models.Readers
-Imports InputModelling.Models.Tokenizers
+Imports InputModelling.Models.TokenizerModels
 Imports InputModelling.Models.Trees.BeliefTree
 Imports InputModelling.Models.VocabularyModelling
 Imports InputModelling.Utilitys
 
 Namespace Examples
+
     Public Module Example
+        Public Function iLangModelTrainTest() As iLangModel.FeedForwardNetwork
+            ' Create the input and target training data
+            Dim inputs As New List(Of List(Of Double))()
+            Dim targets As New List(Of List(Of Double))()
+
+            ' AND logic gate training data
+            inputs.Add(New List(Of Double)() From {0, 0})
+            inputs.Add(New List(Of Double)() From {0, 1})
+            inputs.Add(New List(Of Double)() From {1, 0})
+            inputs.Add(New List(Of Double)() From {1, 1})
+
+            targets.Add(New List(Of Double)() From {0})
+            targets.Add(New List(Of Double)() From {0})
+            targets.Add(New List(Of Double)() From {0})
+            targets.Add(New List(Of Double)() From {1})
+
+            ' Create a feed-forward neural network with 2 input neurons, 2 hidden neurons, and 1 output neuron
+            Dim network As New iLangModel.FeedForwardNetwork(inputSize:=2, hiddenSize:=2, outputSize:=1)
+
+            ' Train the network using the training data for 100 epochs with a learning rate of 0.1
+            network.Train(inputs, targets, epochs:=100, learningRate:=0.1)
+
+            ' Test the trained network
+            Console.WriteLine("Testing the trained network:")
+
+            For i As Integer = 0 To inputs.Count - 1
+                Dim inputVector As List(Of Double) = inputs(i)
+                Dim targetVector As List(Of Double) = targets(i)
+
+                Dim outputVector = network.Forward(inputs)
+
+                Console.WriteLine("Input: {0}, Target: {1}, Output: {2}", String.Join(", ", inputVector), String.Join(", ", targetVector), String.Join(", ", outputVector))
+            Next
+
+            Return network
+        End Function
+        Public Sub IlangModelExample()
+            ' Create an instance of the FeedForwardNetwork
+            Dim feedForwardNN As iLangModel.FeedForwardNetwork = iLangModelTrainTest()
+
+            ' Define the input sequence for the logical AND operation
+            Dim inputSequence As List(Of List(Of Double)) = New List(Of List(Of Double))() From
+            {
+                New List(Of Double)() From {0, 0},
+                New List(Of Double)() From {0, 1},
+                New List(Of Double)() From {1, 0},
+                New List(Of Double)() From {1, 1}
+            }
+
+            ' Apply the forward pass to get the predicted outputs
+            Dim output As List(Of List(Of Double)) = feedForwardNN.Forward(inputSequence)
+
+            ' Display the input sequence and predicted outputs
+            Console.WriteLine("Input Sequence:")
+            For Each inputVector As List(Of Double) In inputSequence
+                Console.WriteLine(String.Join(", ", inputVector))
+            Next
+
+            Console.WriteLine("Predicted Outputs:")
+            For Each outputVector As List(Of Double) In output
+                Console.WriteLine(Math.Round(outputVector(0))) ' Round the output to the nearest integer (0 or 1)
+            Next
+
+            Console.ReadLine()
+        End Sub
+
         Public Sub Word2VectorExample()
             Dim stopwords As List(Of String) = New List(Of String) From {"this", "own", "to", "is", "a", "with", "on", "is", "at", "they", "and", "the", "are", "for"}
 
@@ -170,7 +239,66 @@ Namespace Examples
             Console.WriteLine($"  Expected Monetary Value: {optionB.ExpectedMonetaryValue}")
             Console.WriteLine($"  Regret: {optionB.Regret}")
         End Sub
+        Public Sub iCorpusExample()
+            'Create Vocabulary
+            Dim iCorpus As String = "the quick brown fox, jumped over the lazy dog."
+            Dim NewVocabulary = Corpus.Vocabulary.CreateVocabulary(iCorpus, Corpus.Vocabulary.VocabularyType.Word)
+            Console.WriteLine("vocabulary List: ")
+            Dim str As String = ""
+            For Each item In NewVocabulary
+                str &= "entry :" & item.Text & vbTab & "Value :" & item.Encoding & vbNewLine
 
+            Next
+            Console.WriteLine(str)
+            'Encode InputText
+            Dim InputText As String = iCorpus
+
+            Dim InputLayer As New InputTextRecord
+            InputLayer.Text = iCorpus
+            Console.WriteLine("Input layer: ")
+            InputLayer.Encoding = Encode.Encode_Text(InputText, NewVocabulary, VocabularyType.Word)
+            Console.WriteLine("Input Text: " & "[" & InputLayer.Text & "]" & vbNewLine)
+            Console.WriteLine("Input Embedding: ")
+            str = "["
+            For Each item In InputLayer.Encoding
+                str &= item & " "
+            Next
+            str &= "] "
+            Console.WriteLine(str)
+            Console.WriteLine(vbNewLine)
+            'get inputs
+            InputLayer.blocksize = 4
+            InputLayer.Inputblocks = InputTextRecord.GetBlocks(InputLayer.Encoding, InputLayer.blocksize)
+            Console.WriteLine("Input BlockSize: " & InputLayer.blocksize)
+            Console.WriteLine("Input Blocks ")
+            For Each lst In InputLayer.Inputblocks
+
+                Dim block As String = ""
+                For Each item In lst
+                    block &= item & " "
+                Next
+                Console.WriteLine("[" & block & "]")
+            Next
+            Console.WriteLine(vbNewLine)
+            Dim ofset = 1
+            'get targets(add ofset to get targets further in the future   ofset < blocksize)
+
+            InputLayer.Targetblocks = InputTextRecord.GetTargetBlocks(InputLayer.Encoding, InputLayer.blocksize)
+
+            Console.WriteLine("Target BlockSize: " & InputLayer.blocksize)
+            Console.WriteLine("Target ofset    : " & ofset)
+            Console.WriteLine("Target Blocks  ")
+            For Each lst In InputLayer.Targetblocks
+
+                Dim block As String = ""
+                For Each item In lst
+                    block &= item & " "
+                Next
+                Console.WriteLine("[" & block & "]")
+            Next
+            Console.ReadLine()
+
+        End Sub
 
         Sub MedicalDiagnosisExample()
             ' Define nodes and states
@@ -1303,7 +1431,7 @@ Namespace Examples
             Dim sentences As New List(Of String) From {
             "I love apples.",
             "Bananas are tasty."}
-            Dim Tokenizer As New Tokenizer
+            Dim Tokenizer As New Advanced
             For Each item In Corpus
                 Tokenizer.Train(item, 5)
             Next

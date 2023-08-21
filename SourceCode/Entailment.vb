@@ -5,23 +5,27 @@ Imports InputModelling.Models.Readers
 
 Namespace Models
     Namespace Entailment
+        <Serializable>
         Public Structure CapturedType
 
             Public Property Sentence As String
             Public Property LogicalRelation_ As String
             Public Property SubType As String
         End Structure
+        <Serializable>
         Public Structure ClassifiedSentence
             Public Classified As Boolean
             Public Type As String
             Public Entity As CapturedType
         End Structure
+        <Serializable>
         Public Structure ClassificationRule
             Public Property Type As String
             Public Property Subtype As String
             Public Property Relationship As String
             Public Property Patterns As List(Of Regex)
         End Structure
+        <Serializable>
         Public Class EntailmentClassifier
             Public conclusionIndicators As String() = {"therefore", "thus", "consequently", "hence", "in conclusion", "Therefore", "Thus", "As a result"}
             Public hypothesisIndicators As String() = {"if", "when", "suppose that", "let's say", "assuming that", "Suppose", "Assume", "In the case that", "Given that"}
@@ -277,6 +281,7 @@ Namespace Models
             End Function
 
         End Class
+        <Serializable>
         Public Class LogicalDependencyClassifier
             Private Shared ReadOnly CauseAndEffectPattern As Regex = New Regex("(?i)(cause|effect|result in|lead to|because|due to|consequently)")
             Private Shared ReadOnly ComparisonPattern As Regex = New Regex("(?i)(compared to|greater than|less than|similar to|different from|between)")
@@ -371,6 +376,7 @@ Namespace Models
             End Function
 
         End Class
+        <Serializable>
         Public Class SentenceClassifier
 
 
@@ -2202,7 +2208,7 @@ Namespace Models
                 Public Shared Function GetSentence(sentence As String) As CapturedType
                     Dim lowercaseSentence As String = sentence.ToLower()
                     Dim newType As New CapturedType With {
-        .sentence = lowercaseSentence,
+        .Sentence = lowercaseSentence,
         .LogicalRelation_ = LogicalDependencyClassifier.ClassifyLogicalDependency(lowercaseSentence)
     }
 
@@ -2301,6 +2307,7 @@ Namespace Models
             End Class
 
         End Class
+        <Serializable>
         Public Class LogicalArgumentClassifier
             Private Shared ClassificationRules As List(Of ClassificationRule)
 
@@ -2426,6 +2433,7 @@ Namespace Models
                 Console.ReadLine()
             End Sub
         End Class
+        <Serializable>
         Public Class ContextAnalyzer
             Public Class StatementGroup
                 ''' <summary>
@@ -2552,6 +2560,7 @@ Namespace Models
                 Return statementGroups
             End Function
         End Class
+        <Serializable>
         Public Class PronounResolver
             Public Function ResolvePronoun(sentence As String, pronoun As String) As String
                 ' Tokenize the sentence into words
@@ -2682,6 +2691,286 @@ Namespace Models
 
                 Return False
             End Function
+        End Class
+        ''' <summary>
+        ''' Grammatical person refers to the degree of involvement of a participant in an action, event, or circumstance.
+        ''' There are three degrees of grammatical person:
+        ''' first person (the speaker),
+        ''' second person (someone being spoken to),
+        ''' and third person (anyone/anything not being directly addressed).
+        ''' </summary>
+        <Serializable>
+        Public Class GramaticalPerson
+            Private Shared FirstPersonProNouns As List(Of String) = New List(Of String)({" I ", " ME ", " MY", " MINE", " MYSELF", "I ", " US", " OUR", " OURS"})
+            Private Shared SecondPersonProNouns As List(Of String) = New List(Of String)({" YOU ", " YOUR ", " YOURSELF ", " YOURSELFS", " YOURSELVES"})
+            Private Shared ThirdPersonProNouns As List(Of String) = New List(Of String)({"he", "him", " his", " himself", " she", " her", " hers", " herself", " it", " its", " itself", " they", "them", "their", "theirs", "themselves"})
+
+            ''' <summary>
+            ''' Grammatical person refers to the degree of involvement of a participant in an action, event, or circumstance.
+            ''' There are three degrees of grammatical person:
+            ''' first person (the speaker),
+            ''' second person (someone being spoken to),
+            ''' and third person (anyone/anything not being directly addressed).
+            ''' </summary>
+            Public Enum PerspectivePerson
+                First_Person_ME = 0
+                Second_Person_YOU = 1
+                Third_Person_THEM = 2
+                NOBODY = 4
+            End Enum
+
+            ''' <summary>
+            ''' The cases Of pronouns tell you how they are being used In a sentence.
+            ''' </summary>
+            Public Enum PerspectiveCase
+                PersonalSubject = 0
+                PersonalObject = 1
+                PersonalPosessive = 2
+                NOBODY = 3
+            End Enum
+
+#Region "Perspective Person"
+
+            ''' <summary>
+            ''' checks list if it contains item
+            ''' </summary>
+            ''' <param name="UserSentence"></param>
+            ''' <param name="Lst"></param>
+            ''' <returns></returns>
+            Private Shared Function DETECT_PERSPECTIVE(ByRef UserSentence As String, Lst As List(Of String)) As Boolean
+                DETECT_PERSPECTIVE = False
+                For Each item In Lst
+                    If UCase(UserSentence).Contains(UCase(item)) Then Return True
+                Next
+            End Function
+
+            ''' <summary>
+            ''' RETURNS THE SUBJECT PERSPECTIVE
+            '''         ''' IE:
+            ''' "ME" - 1ST PERSON -
+            ''' "YOU" - SECOND PERSON -
+            ''' "THEM" - 3RD PERSON -
+            ''' "NOBODY" NO PERSPECTIVE
+            ''' </summary>
+            ''' <param name="UserInputStr"></param>
+            ''' <returns></returns>
+            Public Shared Function GetGramiticalPersonStr(ByRef UserInputStr As String) As PerspectivePerson
+                If DETECT_1ST_PERSON(UserInputStr) = True Then Return PerspectivePerson.First_Person_ME
+                If DETECT_2ND_PERSON(UserInputStr) = True Then Return PerspectivePerson.Second_Person_YOU
+                If DETECT_3RD_PERSON(UserInputStr) = True Then Return PerspectivePerson.Third_Person_THEM
+                Return PerspectivePerson.NOBODY
+            End Function
+
+            ''' <summary>
+            ''' First person definition: first person indicates the speaker.
+            ''' First person is the I/we perspective.
+            ''' We, us, our,and ourselves are all first-person pronouns.
+            ''' Specifically, they are plural first-person pronouns.
+            ''' Singular first-person pronouns include I, me, my, mine and myself.
+            ''' </summary>
+            ''' <returns></returns>
+            Public Shared Function DETECT_1ST_PERSON(ByRef UserSentence As String) As Boolean
+                DETECT_1ST_PERSON = False
+                If DETECT_PERSPECTIVE(UserSentence, FirstPersonProNouns) = True Then Return True
+            End Function
+
+            ''' <summary>
+            ''' Second person definition: second person indicates the addressee.
+            ''' Second person is the you perspective.
+            ''' The second-person point of view belongs to the person (or people) being addressed.
+            ''' This is the “you” perspective.
+            ''' the biggest indicator of the second person is the use of second-person pronouns:
+            ''' you, your, yours, yourself, yourselves.
+            ''' </summary>
+            ''' <returns></returns>
+            Public Shared Function DETECT_2ND_PERSON(ByRef UserSentence As String) As Boolean
+                DETECT_2ND_PERSON = False
+                If DETECT_PERSPECTIVE(UserSentence, SecondPersonProNouns) = True Then Return True
+            End Function
+
+            ''' <summary>
+            ''' Third person definition: third person indicates a third party individual other than the speaker.
+            ''' Third person is the he/she/it/they perspective.
+            ''' The third-person point of view belongs to the person (or people) being talked about.
+            ''' The third-person pronouns include
+            ''' he, him, his, himself, she, her, hers, herself, it, its, itself, they, them, their, theirs, and themselves.
+            ''' </summary>
+            ''' <returns></returns>
+            Public Shared Function DETECT_3RD_PERSON(ByRef UserSentence As String) As Boolean
+                DETECT_3RD_PERSON = False
+                If DETECT_PERSPECTIVE(UserSentence, ThirdPersonProNouns) = True Then Return True
+            End Function
+
+            ''' <summary>
+            ''' Returns detected Pronoun indicator
+            ''' </summary>
+            ''' <param name="Userinput"></param>
+            ''' <returns></returns>
+            Public Shared Function GetDetectedPersonalProNoun(ByRef Userinput As String) As String
+                Dim lst As New List(Of String)
+                lst.AddRange(FirstPersonProNouns)
+                lst.AddRange(SecondPersonProNouns)
+                lst.AddRange(ThirdPersonProNouns)
+                For Each item In lst
+                    If Userinput.Contains(UCase(item)) Then Return UCase(item)
+                Next
+                Return ""
+            End Function
+
+#End Region
+
+#Region "Case-The cases Of pronouns tell you how they are being used In a sentence."
+
+            ''' <summary>
+            ''' The cases Of pronouns tell you how they are being used In a sentence.
+            ''' SUBJECT / OBJECT or POSSESSION - or NONE
+            ''' </summary>
+            ''' <returns></returns>
+            Public Function CheckCase(ByRef Userinput As String) As PerspectiveCase
+                CheckCase = PerspectiveCase.NOBODY
+                If CheckPersonalSubject(Userinput) = True Then
+                    Return PerspectiveCase.PersonalSubject
+                Else
+                    If CheckPersonalObject(Userinput) = True Then
+                        Return PerspectiveCase.PersonalObject
+                        If CheckPersonalPossession(Userinput) = True Then
+                            Return PerspectiveCase.PersonalPosessive
+                        End If
+                    End If
+                End If
+
+            End Function
+
+            ''' <summary>
+            ''' The cases Of pronouns tell you how they are being used In a sentence.
+            ''' </summary>
+            Public Shared Function CheckPersonalSubject(ByRef Userinput As String) As Boolean
+                Dim mFirstPersonProNouns As List(Of String) = New List(Of String)({" I", " WE"})
+                Dim mSecondPersonProNouns As List(Of String) = New List(Of String)({" YOU", " US"})
+                Dim mThirdPersonProNouns As List(Of String) = New List(Of String)({" HE", " SHE", " IT"})
+                If DETECT_PERSPECTIVE(Userinput, mFirstPersonProNouns) = True Or
+                    DETECT_PERSPECTIVE(Userinput, mSecondPersonProNouns) = True Or
+                    DETECT_PERSPECTIVE(Userinput, mThirdPersonProNouns) = True Then
+                    Return True
+                Else
+                    Return False
+                End If
+
+            End Function
+
+            ''' <summary>
+            ''' The cases Of pronouns tell you how they are being used In a sentence.
+            ''' </summary>
+            Public Shared Function CheckPersonalObject(ByRef Userinput As String) As Boolean
+                Dim mFirstPersonProNouns As List(Of String) = New List(Of String)({"ME"})
+                Dim mSecondPersonProNouns As List(Of String) = New List(Of String)({"YOU", "US"})
+                Dim mThirdPersonProNouns As List(Of String) = New List(Of String)({" HIM", " HER", " IT"})
+                If DETECT_PERSPECTIVE(Userinput, mFirstPersonProNouns) = True Or
+                    DETECT_PERSPECTIVE(Userinput, mSecondPersonProNouns) = True Or
+                    DETECT_PERSPECTIVE(Userinput, mThirdPersonProNouns) = True Then
+                    Return True
+                Else
+                    Return False
+                End If
+            End Function
+
+            ''' <summary>
+            ''' The cases Of pronouns tell you how they are being used In a sentence.
+            ''' </summary>
+            Public Shared Function CheckPersonalPossession(ByRef Userinput As String) As Boolean
+                Dim mFirstPersonProNouns As List(Of String) = New List(Of String)({" MY", " MINE", " OUR", " OURS"})
+                Dim mSecondPersonProNouns As List(Of String) = New List(Of String)({" YOUR", " YOURS"})
+                Dim mThirdPersonProNouns As List(Of String) = New List(Of String)({" HIS", " HER", " HES", " HE IS", " HERS", " THEIR", " THEIRS"})
+                If DETECT_PERSPECTIVE(Userinput, mFirstPersonProNouns) = True Or
+                    DETECT_PERSPECTIVE(Userinput, mSecondPersonProNouns) = True Or
+                    DETECT_PERSPECTIVE(Userinput, mThirdPersonProNouns) = True Then
+                    Return True
+                Else
+                    Return False
+                End If
+            End Function
+
+            ''' <summary>
+            ''' The cases Of pronouns tell you how they are being used In a sentence.
+            ''' "ME" - 1ST PERSON -
+            ''' "YOU" - SECOND PERSON -
+            ''' "THEM" - 3RD PERSON -
+            ''' "NOBODY" NO PERSPECTIVE
+            ''' </summary>
+            Public Shared Function GetPersonalSubject(ByRef Userinput As String) As String
+                Dim mFirstPersonProNouns As List(Of String) = New List(Of String)({" I", " WE"})
+                Dim mSecondPersonProNouns As List(Of String) = New List(Of String)({" YOU", " US"})
+                Dim mThirdPersonProNouns As List(Of String) = New List(Of String)({" HE", " SHE", " IT"})
+                If DETECT_PERSPECTIVE(Userinput, mFirstPersonProNouns) = True Then
+                    Return "ME"
+                Else
+                    If DETECT_PERSPECTIVE(Userinput, mSecondPersonProNouns) = True Then
+                        Return "YOU"
+                    Else
+                        If DETECT_PERSPECTIVE(Userinput, mThirdPersonProNouns) = True Then
+                            Return "THEM"
+                        Else
+                            Return "NOBODY"
+                        End If
+                    End If
+                End If
+
+            End Function
+
+            ''' <summary>
+            ''' The cases Of pronouns tell you how they are being used In a sentence.
+            ''' "ME" - 1ST PERSON -
+            ''' "YOU" - SECOND PERSON -
+            ''' "THEM" - 3RD PERSON -
+            ''' "NOBODY" NO PERSPECTIVE
+            ''' </summary>
+            Public Shared Function GetPersonalObject(ByRef Userinput As String) As String
+                Dim mFirstPersonProNouns As List(Of String) = New List(Of String)({"ME"})
+                Dim mSecondPersonProNouns As List(Of String) = New List(Of String)({"YOU", "US"})
+                Dim mThirdPersonProNouns As List(Of String) = New List(Of String)({" HIM", " HER", " IT"})
+                If DETECT_PERSPECTIVE(Userinput, mFirstPersonProNouns) = True Then
+                    Return "ME"
+                Else
+                    If DETECT_PERSPECTIVE(Userinput, mSecondPersonProNouns) = True Then
+                        Return "YOU"
+                    Else
+                        If DETECT_PERSPECTIVE(Userinput, mThirdPersonProNouns) = True Then
+                            Return "THEM"
+                        Else
+                            Return "NOBODY"
+                        End If
+                    End If
+                End If
+            End Function
+
+            ''' <summary>
+            ''' The cases Of pronouns tell you how they are being used In a sentence.
+            ''' "ME" - 1ST PERSON -
+            ''' "YOU" - SECOND PERSON -
+            ''' "THEM" - 3RD PERSON -
+            ''' "NOBODY" NO PERSPECTIVE
+            ''' </summary>
+            Public Shared Function GetPersonalPossession(ByRef Userinput As String) As String
+                Dim mFirstPersonProNouns As List(Of String) = New List(Of String)({" MY", " MINE", " OUR", " OURS"})
+                Dim mSecondPersonProNouns As List(Of String) = New List(Of String)({" YOUR", " YOURS"})
+                Dim mThirdPersonProNouns As List(Of String) = New List(Of String)({" HIS", " HER", " HES", " HE IS", " HERS", " THEIR", " THEIRS"})
+                If DETECT_PERSPECTIVE(Userinput, mFirstPersonProNouns) = True Then
+                    Return "ME"
+                Else
+                    If DETECT_PERSPECTIVE(Userinput, mSecondPersonProNouns) = True Then
+                        Return "YOU"
+                    Else
+                        If DETECT_PERSPECTIVE(Userinput, mThirdPersonProNouns) = True Then
+                            Return "THEM"
+                        Else
+                            Return "NOBODY"
+                        End If
+                    End If
+                End If
+            End Function
+
+#End Region
+
         End Class
 
     End Namespace

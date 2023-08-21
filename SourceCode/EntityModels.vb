@@ -1,5 +1,4 @@
 ﻿Imports System.IO
-Imports System.Runtime.CompilerServices
 Imports System.Text.RegularExpressions
 Imports System.Web.Script.Serialization
 Imports System.Windows.Forms
@@ -388,6 +387,7 @@ Namespace Models
                 NewEntSentence.DiscoveredEntitys = DetectEntitys(Text, Entitylist)
                 NewEntSentence.EntitySearchPattern = CaptureEntitySentencePatterns(Text, Entitylist)
                 NewEntSentence.EntitySentence = CaptureEntitySentences(Text, Entitylist)
+                Return NewEntSentence
             End Function
             Public Structure DiscoveredEntitys
 
@@ -1239,12 +1239,14 @@ Namespace Models
             End Class
 
         End Class
+        <Serializable>
         Public Class RuleBasedEntityRecognizer
             Private Shared entityPatterns As Dictionary(Of String, String)
 
             ''' <summary>
             ''' Represents a captured word and its associated information.
             ''' </summary>
+            <Serializable>
             Public Structure CapturedWord
                 ''' <summary>
                 ''' The captured word.
@@ -1521,6 +1523,7 @@ Namespace Models
                 Return capturedEntities
             End Function
         End Class
+        <Serializable>
         Public Class EntityLoader
             Public EntityList As List(Of Entity)
             Public EntityTypes As List(Of String)
@@ -1603,6 +1606,7 @@ Namespace Models
             End Function
 
         End Class
+        <Serializable>
         Public Structure DiscoveredEntity
 
             ''' <summary>
@@ -1644,10 +1648,10 @@ Namespace Models
 
 
         End Structure
-
         ' New property for relationships
 
         ' New structure to represent entity relationships
+        <Serializable>
         Public Structure EntityRelationship
             Public Property RelationshipType As String
             Public Property Sentence As String
@@ -1670,7 +1674,6 @@ Namespace Models
             End Function
 
         End Structure
-
         <Serializable>
         Public Structure EntityType
             Dim Type As String
@@ -1695,8 +1698,15 @@ Namespace Models
 End Namespace
 Namespace DataObjects
 
-
-    Public Structure AnswerType
+    Enum ConclusionTypes
+        Affirmative_Conclusion
+        Conditional_Conclusion
+        Negative_Conclusion
+        Recommendation_Conclusion
+        Prediction_Conclusion
+    End Enum
+    <Serializable>
+    Public Class AnswerType
 
         Public Sub New(ByVal type As String, ByVal entities As List(Of String))
             Me.Type = type
@@ -1705,8 +1715,8 @@ Namespace DataObjects
 
         Public Property Entities As List(Of String)
         Public Property Type As String
-    End Structure
-
+    End Class
+    <Serializable>
     Public Structure CapturedContent
         Public Sub New(ByVal word As String, ByVal precedingWords As List(Of String), ByVal followingWords As List(Of String))
             Me.Word = word
@@ -1719,7 +1729,7 @@ Namespace DataObjects
         Public Property PrecedingWords As List(Of String)
         Public Property Word As String
     End Structure
-
+    <Serializable>
     Public Structure CapturedWord
         Public Sub New(ByVal word As String, ByVal precedingWords As List(Of String), ByVal followingWords As List(Of String), ByVal person As String, ByVal location As String)
             Me.Word = word
@@ -1767,7 +1777,7 @@ Namespace DataObjects
         Public Property PrecedingWords As List(Of String)
         Public Property Word As String
     End Structure
-
+    <Serializable>
     Public Structure NlpReport
 
         Public EntityLists As List(Of Entity)
@@ -1785,6 +1795,7 @@ Namespace DataObjects
     ''' Used to retrieve Learning Patterns
     ''' Learning Pattern / Nym
     ''' </summary>
+    <Serializable>
     Public Structure SemanticPattern
 
         ''' <summary>
@@ -1795,7 +1806,7 @@ Namespace DataObjects
         ''' <summary>
         ''' Used to hold the connection string
         ''' </summary>
-        Public ConectionStr As String
+        Public ConnectionStr As String
 
         ''' <summary>
         ''' used to identify patterns
@@ -1806,6 +1817,11 @@ Namespace DataObjects
         ''' Search patterns A# is B#
         ''' </summary>
         Public SearchPatternStr As String
+
+        Public Sub New(ConnectionStr As String)
+            Me.New()
+            Me.ConnectionStr = ConnectionStr
+        End Sub
 
         ''' <summary>
         ''' filters collection of patterns by nym
@@ -1857,6 +1873,35 @@ Namespace DataObjects
             End Using
             Return DbSubjectLst
         End Function
+        ''' <summary>
+        ''' Gets all Semantic Patterns From Table
+        ''' </summary>
+        ''' <param name="TableName"></param>
+        ''' <returns></returns>
+        Public Function GetDBSemanticPatterns(ByRef TableName As String) As List(Of SemanticPattern)
+            Dim DbSubjectLst As New List(Of SemanticPattern)
+
+            Dim SQL As String = "SELECT * FROM " & TableName
+            Using conn = New System.Data.OleDb.OleDbConnection(ConnectionStr)
+                Using cmd = New System.Data.OleDb.OleDbCommand(SQL, conn)
+                    conn.Open()
+                    Try
+                        Dim dr = cmd.ExecuteReader()
+                        While dr.Read()
+                            Dim NewKnowledge As New SemanticPattern With {
+                                .NymStr = dr("Nym").ToString(),
+                                .SearchPatternStr = dr("SemanticPattern").ToString()
+                            }
+                            DbSubjectLst.Add(NewKnowledge)
+                        End While
+                    Catch e As Exception
+                        ' Do some logging or something.
+                        MessageBox.Show("There was an error accessing your data. GetDBSemanticPatterns: " & e.ToString())
+                    End Try
+                End Using
+            End Using
+            Return DbSubjectLst
+        End Function
 
         ''' <summary>
         ''' gets semantic patterns from table based on query SQL
@@ -1869,6 +1914,35 @@ Namespace DataObjects
 
             Dim SQL As String = Query
             Using conn = New System.Data.OleDb.OleDbConnection(iConnectionStr)
+                Using cmd = New System.Data.OleDb.OleDbCommand(SQL, conn)
+                    conn.Open()
+                    Try
+                        Dim dr = cmd.ExecuteReader()
+                        While dr.Read()
+                            Dim NewKnowledge As New SemanticPattern With {
+                                    .NymStr = dr("Nym").ToString(),
+                                    .SearchPatternStr = dr("SemanticPattern").ToString()
+                                }
+                            DbSubjectLst.Add(NewKnowledge)
+                        End While
+                    Catch e As Exception
+                        ' Do some logging or something.
+                        MessageBox.Show("There was an error accessing your data. GetDBSemanticPatterns: " & e.ToString())
+                    End Try
+                End Using
+            End Using
+            Return DbSubjectLst
+        End Function
+        ''' <summary>
+        ''' gets semantic patterns from table based on query SQL
+        ''' </summary>
+        ''' <param name="Query"></param>
+        ''' <returns></returns>
+        Public Function GetDBSemanticPatternsbyQuery(ByRef Query As String) As List(Of SemanticPattern)
+            Dim DbSubjectLst As New List(Of SemanticPattern)
+
+            Dim SQL As String = Query
+            Using conn = New System.Data.OleDb.OleDbConnection(ConnectionStr)
                 Using cmd = New System.Data.OleDb.OleDbCommand(SQL, conn)
                     conn.Open()
                     Try
@@ -1922,7 +1996,7 @@ Namespace DataObjects
         ''' Adds a New Semantic pattern
         ''' </summary>
         ''' <param name="NewSemanticPattern"></param>
-        Public Function AddSemanticPattern(ByRef iConnectionStr As String, ByRef Tablename As String, ByRef NewSemanticPattern As SemanticPattern) As Boolean
+        Public Shared Function AddSemanticPattern(ByRef iConnectionStr As String, ByRef Tablename As String, ByRef NewSemanticPattern As SemanticPattern) As Boolean
             AddSemanticPattern = False
             If NewSemanticPattern.NymStr IsNot Nothing And NewSemanticPattern.SearchPatternStr IsNot Nothing Then
 
@@ -1943,8 +2017,32 @@ Namespace DataObjects
             Else
             End If
         End Function
+        ''' <summary>
+        ''' Adds a New Semantic pattern
+        ''' </summary>
+        ''' <param name="NewSemanticPattern"></param>
+        Public Function AddSemanticPattern(ByRef Tablename As String, ByRef NewSemanticPattern As SemanticPattern) As Boolean
+            AddSemanticPattern = False
+            If NewSemanticPattern.NymStr IsNot Nothing And NewSemanticPattern.SearchPatternStr IsNot Nothing Then
 
-        Public Function CheckIfSemanticPatternDetected(ByRef iConnectionStr As String, ByRef TableName As String, ByRef Userinput As String) As Boolean
+                Dim sql As String = "INSERT INTO " & Tablename & " (Nym, SemanticPattern) VALUES ('" & NewSemanticPattern.NymStr & "','" & NewSemanticPattern.SearchPatternStr & "')"
+
+                Using conn = New System.Data.OleDb.OleDbConnection(ConnectionStr)
+
+                    Using cmd = New System.Data.OleDb.OleDbCommand(sql, conn)
+                        conn.Open()
+                        Try
+                            cmd.ExecuteNonQuery()
+                            AddSemanticPattern = True
+                        Catch ex As Exception
+                            MessageBox.Show("There was an error accessing your data. AddSemanticPattern: " & ex.ToString())
+                        End Try
+                    End Using
+                End Using
+            Else
+            End If
+        End Function
+        Public Shared Function CheckIfSemanticPatternDetected(ByRef iConnectionStr As String, ByRef TableName As String, ByRef Userinput As String) As Boolean
             CheckIfSemanticPatternDetected = False
             For Each item In InsertWildcardsIntoPatterns(GetDBSemanticPatterns(iConnectionStr, TableName))
                 If Userinput Like item.SearchPatternStr Then
@@ -1952,8 +2050,23 @@ Namespace DataObjects
                 End If
             Next
         End Function
-
-        Public Function GetDetectedSemanticPattern(ByRef iConnectionStr As String, ByRef TableName As String, ByRef Userinput As String) As SemanticPattern
+        Public Function CheckIfSemanticPatternDetected(ByRef TableName As String, ByRef Userinput As String) As Boolean
+            CheckIfSemanticPatternDetected = False
+            For Each item In InsertWildcardsIntoPatterns(GetDBSemanticPatterns(ConnectionStr, TableName))
+                If Userinput Like item.SearchPatternStr Then
+                    Return True
+                End If
+            Next
+        End Function
+        Public Function GetDetectedSemanticPattern(ByRef TableName As String, ByRef Userinput As String) As SemanticPattern
+            GetDetectedSemanticPattern = Nothing
+            For Each item In InsertWildcardsIntoPatterns(GetDBSemanticPatterns(ConnectionStr, TableName))
+                If Userinput Like item.SearchPatternStr Then
+                    Return item
+                End If
+            Next
+        End Function
+        Public Shared Function GetDetectedSemanticPattern(ByRef iConnectionStr As String, ByRef TableName As String, ByRef Userinput As String) As SemanticPattern
             GetDetectedSemanticPattern = Nothing
             For Each item In InsertWildcardsIntoPatterns(GetDBSemanticPatterns(iConnectionStr, TableName))
                 If Userinput Like item.SearchPatternStr Then
@@ -1973,7 +2086,7 @@ Namespace DataObjects
 
     End Structure
 
-
+    <Serializable>
     Public Structure WordWithContext
         ''' <summary>
         ''' Gets or sets the context words.
@@ -2011,111 +2124,11 @@ Namespace DataObjects
         Public Property Word As String
     End Structure
 End Namespace
-Public Module Ext
 
-    ''' <summary>
-    ''' Writes the contents of an embedded resource embedded as Bytes to disk.
-    ''' </summary>
-    ''' <param name="BytesToWrite">Embedded resource</param>
-    ''' <param name="FileName">    Save to file</param>
-    ''' <remarks></remarks>
-    <System.Runtime.CompilerServices.Extension()>
-    Public Sub FileSave(ByVal BytesToWrite() As Byte, ByVal FileName As String)
-
-        If IO.File.Exists(FileName) Then
-            IO.File.Delete(FileName)
-        End If
-
-        Dim FileStream As New System.IO.FileStream(FileName, System.IO.FileMode.OpenOrCreate)
-        Dim BinaryWriter As New System.IO.BinaryWriter(FileStream)
-
-        BinaryWriter.Write(BytesToWrite)
-        BinaryWriter.Close()
-        FileStream.Close()
-    End Sub
-    ''' <summary>
-    ''' Extracts words between  based on the before and after words
-    ''' IE: THe cat sat on the mat (before The After The) output: cat sat on
-    ''' </summary>
-    ''' <param name="sentence"></param>
-    ''' <param name="beforeWord"></param>
-    ''' <param name="afterWord"></param>
-    ''' <returns></returns>
-    <Extension>
-    Public Function ExtractWordsBetween(sentence As String, beforeWord As String, afterWord As String) As List(Of String)
-        Dim words As New List(Of String)()
-
-        Dim sentenceWords As String() = sentence.Split(" "c)
-        Dim startIndex As Integer = -1
-        Dim endIndex As Integer = -1
-
-        ' Find the starting and ending indices of the target words
-        For i As Integer = 0 To sentenceWords.Length - 1
-            If sentenceWords(i).Equals(beforeWord, StringComparison.OrdinalIgnoreCase) Then
-                startIndex = i
-            End If
-
-            If sentenceWords(i).Equals(afterWord, StringComparison.OrdinalIgnoreCase) Then
-                endIndex = i
-            End If
-        Next
-
-        ' Extract words between the target words
-        If startIndex <> -1 AndAlso endIndex <> -1 AndAlso startIndex < endIndex Then
-            For i As Integer = startIndex + 1 To endIndex - 1
-                words.Add(sentenceWords(i))
-            Next
-        End If
-
-        Return words
-    End Function
-
-    <Extension>
-    Public Function StartsWithAny(str As String, values As IEnumerable(Of String)) As Boolean
-        For Each value As String In values
-            If str.StartsWith(value) Then
-                Return True
-            End If
-        Next
-
-        Return False
-    End Function
-
-
-    <Extension()>
-    Public Function StartsWithAny(ByVal input As String, ByVal values As String()) As Boolean
-        For Each value As String In values
-            If input.StartsWith(value, StringComparison.OrdinalIgnoreCase) Then
-                Return True
-            End If
-        Next
-        Return False
-    End Function
-
-
-    Enum ConclusionTypes
-        Affirmative_Conclusion
-        Conditional_Conclusion
-        Negative_Conclusion
-        Recommendation_Conclusion
-        Prediction_Conclusion
-    End Enum
-
-    <Extension()>
-    Public Function ContainsAny(text As String, indicators As String()) As Boolean
-        For Each indicator As String In indicators
-            If text.Contains(indicator) Then
-                Return True
-            End If
-        Next
-
-        Return False
-    End Function
-
-End Module
 Namespace Utilitys
 
     ' Latent Dirichlet Allocation (LDA) algorithm
+    <Serializable>
     Public Class Latent_Dirichlet_Allocation
 
 
@@ -2126,7 +2139,7 @@ Namespace Utilitys
         'End Class
 
 
-
+        <Serializable>
         Public Class WordCount
             Public Property WordCount As Dictionary(Of String, Integer)
 

@@ -19,6 +19,7 @@ Namespace Models
         ''' if this tree requires data to be stroed it needs to be stored inside the dataStorae locations
         ''' </summary>
         <ComClass(TryTree.ClassId, TryTree.InterfaceId, TryTree.EventsId)>
+        <Serializable>
         Public Class TryTree
 
 #Region "Public Fields"
@@ -841,7 +842,7 @@ Namespace Models
 
 
         End Class
-
+        <Serializable>
         Public Class TrieTree
             Public Overridable Property root As Node
 
@@ -892,7 +893,7 @@ Namespace Models
             End Function
 
         End Class
-
+        <Serializable>
         Public Class FrequencyTrieTree
             Inherits TrieTree
             Public Shadows Property root As FrequencyNode
@@ -908,7 +909,7 @@ Namespace Models
             End Function
 
         End Class
-
+        <Serializable>
         Public Class VocabularyTrieTree
             Inherits TrieTree
             Private Shadows WithEvents Root As VocabularyNode
@@ -951,7 +952,7 @@ Namespace Models
 
         End Class
         Namespace BeliefTree
-
+            <Serializable>
             Public Class ConditionalProbabilityTable
                 Public Property Node As BeliefNode
                 Public Property Values As Dictionary(Of List(Of String), Double)
@@ -965,6 +966,7 @@ Namespace Models
                     Values(parentStates) = value
                 End Sub
             End Class
+            <Serializable>
             Public Class InferenceEngine
                 Public Sub New(network As BeliefNetwork)
                     Me.Network = network
@@ -1033,6 +1035,7 @@ Namespace Models
                     End While
                 End Function
             End Class
+            <Serializable>
             Public Class BeliefNetwork
                 Public Property Nodes As List(Of BeliefNode)
                 Public Sub LoadTrainingData(trainingData As Dictionary(Of String, Dictionary(Of List(Of String), Double)))
@@ -1271,6 +1274,7 @@ Namespace Models
         ''' organized then the tree can be reorganized the rules are such that the lowest numbers are
         ''' always on the left and the highest numbers are on the right
         ''' </summary>
+        <Serializable>
         Public Class BinaryTree
 
             ''' <summary>
@@ -1403,6 +1407,7 @@ Namespace Models
     ''' when if held in the node would cause repetitive information being held.
     ''' This also enables for the Vocabulary to be used as a custom Dictionary object
     ''' </summary>
+    <Serializable>
     Public Structure VocabItem
 
         ''' <summary>
@@ -1457,6 +1462,7 @@ Namespace Models
     ''' <summary>
     ''' Returns a list WordGram Probability Given a Sequence of Tokens
     ''' </summary>
+    <Serializable>
     Public Class Predict
 
         ''' <summary>
@@ -1621,6 +1627,7 @@ Namespace Models
 
     End Class
     Namespace Nodes
+        <Serializable>
         Public Class BeliefNode
             Public Property Name As String
             Public Property States As List(Of String)
@@ -1633,6 +1640,7 @@ Namespace Models
                 Parents = New List(Of BeliefNode)
             End Sub
         End Class
+        <Serializable>
         Public Class Node
 
 
@@ -2280,6 +2288,7 @@ Namespace Models
             End Function
 
         End Class
+        <Serializable>
         Public Class BinaryNode
             Public Left As BinaryNode
             Public Right As BinaryNode
@@ -2390,6 +2399,7 @@ Namespace Models
             End Sub
 
         End Class
+        <Serializable>
         Public Class FrequencyNode
             Inherits Node
 
@@ -2495,6 +2505,7 @@ Namespace Models
         ''' <summary>
         ''' Used To Hold Risk Evaluation Data
         ''' </summary>
+        <Serializable>
         Public Structure RiskNode
 
             Private mCost As Integer
@@ -2575,6 +2586,7 @@ Namespace Models
             End Property
 
         End Structure
+        <Serializable>
         Public Class VocabularyNode
             Inherits FrequencyNode
 
