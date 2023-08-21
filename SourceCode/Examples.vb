@@ -1,8 +1,6 @@
 ﻿Imports System.IO
 Imports System.Numerics
 Imports System.Windows.Forms
-Imports InputModelling.LanguageModels.BaseModels.LanguageModelFactory
-Imports InputModelling.LanguageModels.BaseModels.LanguageModelFactory.Corpus.Vocabulary
 Imports InputModelling.Models
 Imports InputModelling.Models.Chunkers
 Imports InputModelling.Models.Embeddings
@@ -16,6 +14,8 @@ Imports InputModelling.Models.Entailment
 Imports InputModelling.Models.Entailment.ContextAnalyzer
 Imports InputModelling.Models.Entailment.SentenceClassifier
 Imports InputModelling.Models.EntityModel
+Imports InputModelling.Models.LanguageModels
+Imports InputModelling.Models.LanguageModels.Corpus.Vocabulary
 Imports InputModelling.Models.Nodes
 Imports InputModelling.Models.Readers
 Imports InputModelling.Models.TokenizerModels

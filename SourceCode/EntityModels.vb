@@ -2,7 +2,7 @@
 Imports System.Text.RegularExpressions
 Imports System.Web.Script.Serialization
 Imports System.Windows.Forms
-Imports InputModelling.LanguageModels.BaseModels.LanguageModelFactory.Corpus.Document.Sentence
+Imports InputModelling.Models.LanguageModels.Corpus.Document.Sentence
 Imports Newtonsoft.Json
 Namespace Models
 

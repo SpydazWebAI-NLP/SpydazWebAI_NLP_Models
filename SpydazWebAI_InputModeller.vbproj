@@ -70,7 +70,7 @@
   <ItemGroup>
     <Compile Include="SourceCode\Entailment.vb" />
     <Compile Include="SourceCode\EntityModels.vb" />
-    <Compile Include="SourceCode\LanguageModels.vb" />
+    <Compile Include="SourceCode\ObjectOrientedModels\LanguageModels.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
@@ -88,12 +88,12 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="SourceCode\Examples.vb" />
-    <Compile Include="SourceCode\Embeddings.vb" />
-    <Compile Include="SourceCode\Tokenizers.vb" />
+    <Compile Include="SourceCode\ObjectOrientedModels\Embeddings.vb" />
+    <Compile Include="SourceCode\ObjectOrientedModels\Tokenizers.vb" />
     <Compile Include="SourceCode\TrainingTextGenerator.vb" />
     <Compile Include="SourceCode\Storage.vb" />
     <Compile Include="SourceCode\InputModels.vb" />
-    <Compile Include="SourceCode\Trees.vb" />
+    <Compile Include="SourceCode\ObjectOrientedModels\Trees.vb" />
     <Compile Include="SourceCode\Utilitys.vb" />
   </ItemGroup>
   <ItemGroup>
